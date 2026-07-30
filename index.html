@@ -144,6 +144,18 @@
   .pair-table td.pt-val{width:150px;}
   .pair-table .pt-valnum{font-weight:600; color:var(--navy-900); font-size:12px; white-space:nowrap; margin-bottom:3px;}
 
+  /* ---- Time-compare table (bottleneck section) ---- */
+  .time-table td.tt-rank{width:28px; color:var(--grey-400); font-weight:600; font-size:11.5px;}
+  .time-table td.tt-id{font-weight:500; color:var(--navy-900); font-size:12.5px;}
+  .time-table td.tt-num{white-space:nowrap; font-size:12.5px;}
+  .rank-chip{display:inline-block; padding:2px 8px; border-radius:100px; font-size:10.5px; font-weight:600; margin-left:6px;}
+  .rank-chip.hi{background:var(--orange-100); color:var(--orange-600);}
+  .rank-chip.lo{background:var(--grey-100); color:var(--grey-500);}
+  .corr-card{background:var(--grey-50); border-radius:12px; padding:16px 18px; border:1px solid rgba(10,38,71,.05);}
+  .corr-card .cc-label{font-size:12px; color:var(--grey-600); font-weight:400; margin-bottom:6px;}
+  .corr-card .cc-value{font-size:26px; font-weight:700; color:var(--navy-900);}
+  .corr-card .cc-note{font-size:11.5px; color:var(--grey-600); margin-top:6px; line-height:1.5;}
+
   /* ---- Top 10 shipment table: click-to-expand detail ---- */
   tr.top-row{cursor:pointer; transition:background .15s ease;}
   tr.top-row:hover{background:var(--grey-50);}
@@ -309,6 +321,20 @@
       <table><thead><tr><th>#</th><th>Shipment</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th></tr></thead><tbody id="topTableBody"></tbody></table>
     </div>
 
+    <div class="section-head reveal"><div><h2><span class="bar"></span>เวลารวมทั้งเที่ยว &amp; จุดที่เสียเวลา (Bottleneck Analysis)</h2><p>Shipment ไหนใช้เวลารวมนานที่สุด และปัจจัยที่อาจเกี่ยวข้อง (จำนวนสินค้า/จำนวน Gate ที่ผ่าน) สัมพันธ์กันจริงหรือไม่</p></div></div>
+    <div class="kpi-grid reveal" id="kpiBottleneck"></div>
+    <div class="panel reveal">
+      <h3>Top 10 Shipment ที่ใช้เวลารวมนานที่สุด</h3>
+      <div class="sub">เวลารวม = เวลาตั้งแต่เข้า Gate แรกจนออก Gate สุดท้าย (นาที) — แสดงคู่กับจำนวนรายการสินค้า (SKU) และจำนวน Gate ที่ผ่านในเที่ยวนั้น เพื่อดูว่าเวลาที่มากขึ้นสอดคล้องกับ SKU/Gate ที่มากขึ้นหรือไม่</div>
+      <div id="timeCompareTable"></div>
+    </div>
+    <div class="panel reveal">
+      <h3>เวลารวมสัมพันธ์กับ SKU และ Gate มากแค่ไหน?</h3>
+      <div class="sub">ค่าสหสัมพันธ์ (Pearson correlation, r) ระหว่างเวลารวมต่อเที่ยว กับจำนวนรายการสินค้า และจำนวน Gate ที่ผ่าน — คำนวณจาก Shipment ทุกเที่ยวที่มีข้อมูลเวลาครบตามตัวกรองปัจจุบัน ค่า r เข้าใกล้ 1 หรือ -1 คือสัมพันธ์กันมาก เข้าใกล้ 0 คือแทบไม่สัมพันธ์กัน</div>
+      <div id="corrCards" class="kpi-grid" style="grid-template-columns:repeat(2,1fr);"></div>
+    </div>
+    <div class="panel reveal"><h3>จุดที่เสียเวลามากที่สุดในกระบวนการ (เฉลี่ยต่อเที่ยว)</h3><div class="sub">ใช้ค่า Lost Time ที่ระบบต้นทางคำนวณไว้แล้วโดยตรง (ไม่ได้คำนวณซ้ำ): รอเข้า Gate เฉลี่ยต่อครั้ง / Shipment Start−Weight Start / Center Process−Shipment Start (นาที)</div><div class="chart-box tall" id="chLostTimeStage"></div></div>
+
     <div class="section-head reveal"><div><h2><span class="bar"></span>ข้อเสนอแนะเชิงปฏิบัติการ</h2><p>สรุปประเด็นสำคัญจากข้อมูล (ตามตัวกรองปัจจุบัน)</p></div></div>
     <div class="panel reveal"><div class="insight-list" id="insightList"></div></div>
 
@@ -385,6 +411,23 @@ function parseNum(s){
   if(s === undefined || s === null) return 0;
   const n = parseFloat(String(s).replace(/,/g,'').trim());
   return isNaN(n) ? 0 : n;
+}
+
+// Parses signed duration columns (Lost Time, "Weight Success - X" deltas).
+// Unlike parseClock(), 0:00 here is a real zero-length duration, not a
+// missing-data sentinel -- these are pre-computed by the source sheet, not
+// clock-of-day timestamps. Handles both "H:MM" and the odd "H:MM:SS" variant
+// that appears on some rows (verified: same value, just with a trailing
+// ":00" seconds component -- Google Sheets duration-format quirk).
+function parseDuration(s){
+  if(s === undefined || s === null) return null;
+  s = String(s).trim();
+  if(!s) return null;
+  const m = s.match(/^(-?\d+):(\d{2})(?::(\d{2}))?$/);
+  if(!m) return null;
+  const neg = s.startsWith('-');
+  const total = Math.abs(parseInt(m[1],10))*60 + parseInt(m[2],10);
+  return neg ? -total : total;
 }
 
 function parseThaiDateToMonthKey(dstr){
@@ -557,6 +600,25 @@ function animateCount(el, target, decimals=0){
 function fmtMin(m){ if(m===null||m===undefined) return '-'; const h=Math.floor(m/60), mm=Math.round(m%60); return h>0 ? `${h}ชม.${mm}น.` : `${mm}น.`; }
 function fmtPct(part, total){ return total>0 ? (part/total*100).toFixed(1)+'%' : '0%'; }
 
+// Pearson correlation coefficient between two equal-length numeric arrays.
+// Returns null when there isn't enough variance/data to compute a meaningful value.
+function pearsonCorr(xs, ys){
+  const n = xs.length;
+  if(n < 3) return null;
+  const mx = xs.reduce((a,v)=>a+v,0)/n, my = ys.reduce((a,v)=>a+v,0)/n;
+  let sxy=0, sxx=0, syy=0;
+  for(let i=0;i<n;i++){ const dx=xs[i]-mx, dy=ys[i]-my; sxy+=dx*dy; sxx+=dx*dx; syy+=dy*dy; }
+  if(sxx===0 || syy===0) return null;
+  return sxy / Math.sqrt(sxx*syy);
+}
+function corrLabel(r){
+  if(r===null) return 'ข้อมูลไม่พอ';
+  const a = Math.abs(r);
+  const strength = a>=0.7 ? 'สัมพันธ์กันมาก' : a>=0.4 ? 'สัมพันธ์กันปานกลาง' : a>=0.2 ? 'สัมพันธ์กันเล็กน้อย' : 'แทบไม่สัมพันธ์กัน';
+  const dir = r>0 ? ' (ทิศทางเดียวกัน)' : r<0 ? ' (ทิศทางตรงข้าม)' : '';
+  return strength + dir;
+}
+
 // Strip common Thai company legal-entity prefixes/suffixes so customer names
 // read shorter and cleaner (e.g. "บริษัท เอบีซี จำกัด" -> "เอบีซี").
 function cleanCustomerName(name){
@@ -636,8 +698,13 @@ function buildModel(csvText){
     productGroup: col('Product Group'), materialDesc: col('Material Desc'), gate: col('Gate <br /> Name'),
     weight: col('Weight'), date: col('Shipment <br /> Date'),
     gateIn: col('Gate <br /> Check in'), gateOut: col('Gate <br /> Check out'), issue: col('Issue'),
+    wStart: col('Weight <br /> Start'), shipTime: col('Shipment <br /> Time'), centerTime: col('Center <br /> Time'), wSuccess: col('Weight <br /> Success'),
+    dWeight: col('Weight Success <br /> - <br /> Weight Start'), dShip: col('Weight Success <br /> - <br /> Shipment Start'), dCenter: col('Weight Success <br /> - <br /> Center'),
+    ltGate: col('Lost Time <br /> เวลาที่รถรอเข้า <br /> Gate'), ltShip: col('Lost Time <br /> Shipment Start - <br /> Weight Start'), ltCenter: col('Lost Time <br /> Center Process - <br /> Shipment Start'),
   };
-  const fallback = {shipment:0,jobtype:1,status:2,vehicle:4,soldTo:5,shipTo:6,productGroup:7,materialDesc:8,gate:9,weight:10,date:11,gateIn:19,gateOut:20,issue:26};
+  const fallback = {shipment:0,jobtype:1,status:2,vehicle:4,soldTo:5,shipTo:6,productGroup:7,materialDesc:8,gate:9,weight:10,date:11,
+    wStart:12,shipTime:13,centerTime:14,wSuccess:15,dWeight:16,dShip:17,dCenter:18,gateIn:19,gateOut:20,
+    ltGate:23,ltShip:24,ltCenter:25,issue:26};
   Object.keys(idx).forEach(k=>{ if(idx[k] === -1) idx[k] = fallback[k]; });
 
   const dataRows = rows.slice(headerIdx+1).filter(r => r[idx.shipment] && r[idx.shipment].trim());
@@ -658,6 +725,12 @@ function buildModel(csvText){
         date: dateStr, month: parseThaiDateToMonthKey(dateStr),
         weight: 0, lineCount: 0, issue: '', gates: new Set(),
         firstIn: null, lastOut: null,
+        // สเตจต่างๆ ของกระบวนการ (นาที) — ค่าคงที่ต่อ 1 เที่ยว จึงอ่านจากแถวแรกที่เจอพอ
+        d1: parseDuration(r[idx.dWeight]),   // Weight Success - Weight Start
+        d2: parseDuration(r[idx.dShip]),     // Weight Success - Shipment Start
+        d3: parseDuration(r[idx.dCenter]),   // Weight Success - Center
+        lt2: parseDuration(r[idx.ltShip]),   // Lost Time: Shipment Start - Weight Start
+        lt3: parseDuration(r[idx.ltCenter]), // Lost Time: Center Process - Shipment Start
       });
     }
     const sh = shipments.get(sid);
@@ -670,7 +743,8 @@ function buildModel(csvText){
 
     const pg = (r[idx.productGroup]||'').trim();
     const md = (r[idx.materialDesc]||'').trim();
-    lines.push({ shipment: sid, productGroup: pg, materialDesc: md, weight: w });
+    const st = (r[idx.shipTo]||'').trim();
+    lines.push({ shipment: sid, productGroup: pg, materialDesc: md, weight: w, shipTo: st });
 
     const gate = (r[idx.gate]||'').trim();
     const inMin = parseClock(r[idx.gateIn]);
@@ -684,7 +758,9 @@ function buildModel(csvText){
         if(!gateVisitSet.has(key)){
           gateVisitSet.add(key);
           let dur = outMin - inMin; if(dur < 0) dur += 1440;
-          if(dur >= 0 && dur < 600) gateVisits.push({shipment:sid, gate, minutes:dur});
+          // เวลารอเข้า Gate ที่คำนวณมาจากระบบโดยตรง (ไม่ใช่ derive เอง)
+          const waitMin = parseDuration(r[idx.ltGate]);
+          if(dur >= 0 && dur < 600) gateVisits.push({shipment:sid, gate, minutes:dur, waitMinutes: waitMin});
         }
       }
     }
@@ -928,6 +1004,66 @@ function render(model){
       </td>
     </tr>`;
   }).join('');
+
+  // ---- Bottleneck analysis: total time per shipment vs SKU count vs Gate count ----
+  const spanShips = shipmentList.filter(s => s.span !== null);
+  const avgSpan = spanShips.length ? spanShips.reduce((a,s)=>a+s.span,0)/spanShips.length : null;
+  const avgLt2 = (()=>{ const v = shipmentList.filter(s=>s.lt2!==null).map(s=>s.lt2); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; })();
+  const avgLt3 = (()=>{ const v = shipmentList.filter(s=>s.lt3!==null).map(s=>s.lt3); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; })();
+  const avgGateWait = (()=>{ const v = gateVisits.filter(g=>g.waitMinutes!==null).map(g=>g.waitMinutes); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : null; })();
+
+  document.getElementById('kpiBottleneck').innerHTML = `
+    <div class="kpi reveal"><div class="top-row"><div class="icon">⏱️</div></div><div class="label">เวลารวมเฉลี่ยต่อเที่ยว</div><div class="value">${avgSpan!==null?fmtMin(avgSpan):'-'}</div><span class="delta info">Gate แรกถึง Gate สุดท้าย · ${spanShips.length} เที่ยวที่มีข้อมูลครบ</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">🚪</div></div><div class="label">รอเข้า Gate เฉลี่ย</div><div class="value">${avgGateWait!==null?fmtMin(avgGateWait):'-'}</div><span class="delta info">เฉลี่ยต่อการเข้า Gate 1 ครั้ง (Lost Time จากระบบ)</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">⚖️</div></div><div class="label">Shipment Start − Weight Start</div><div class="value">${avgLt2!==null?fmtMin(avgLt2):'-'}</div><span class="delta info">Lost Time เฉลี่ยต่อเที่ยว (จากระบบ)</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">🏭</div></div><div class="label">Center Process − Shipment Start</div><div class="value">${avgLt3!==null?fmtMin(avgLt3):'-'}</div><span class="delta info">Lost Time เฉลี่ยต่อเที่ยว (จากระบบ)</span></div>
+  `;
+
+  // Rank shipments (that have a valid span) by span / lineCount / gateCount so we can
+  // show, for the Top-10-by-time list, whether those same shipments also rank high
+  // in SKU count or Gate count -- i.e. whether the factors move together or not.
+  const bySpanDesc = [...spanShips].sort((a,b)=>b.span-a.span);
+  const byLinesDesc = [...spanShips].sort((a,b)=>b.lineCount-a.lineCount);
+  const byGatesDesc = [...spanShips].sort((a,b)=>b.gateList.length-a.gateList.length);
+  const rankOf = (arr) => { const m = new Map(); arr.forEach((s,i)=>m.set(s.id, i+1)); return m; };
+  const spanRank = rankOf(bySpanDesc), linesRank = rankOf(byLinesDesc), gatesRank = rankOf(byGatesDesc);
+  const top10Span = bySpanDesc.slice(0,10);
+  const n10 = Math.max(spanShips.length,1);
+  const rankChip = (rank) => rank<=10 ? `<span class="rank-chip hi">อันดับ ${rank}</span>` : `<span class="rank-chip lo">อันดับ ${rank}/${n10}</span>`;
+
+  if(top10Span.length){
+    document.getElementById('timeCompareTable').innerHTML = `
+      <table class="time-table"><thead><tr><th>#</th><th>Shipment</th><th>เวลารวม</th><th>SKU (จำนวนรายการ)</th><th>Gate ที่ผ่าน</th></tr></thead><tbody>
+      ${top10Span.map((s,i)=>`<tr>
+        <td class="tt-rank">${i+1}</td>
+        <td class="tt-id">${s.id}</td>
+        <td class="tt-num">${fmtMin(s.span)}</td>
+        <td class="tt-num">${s.lineCount} ${rankChip(linesRank.get(s.id))}</td>
+        <td class="tt-num">${s.gateList.length} ${rankChip(gatesRank.get(s.id))}</td>
+      </tr>`).join('')}
+      </tbody></table>`;
+  } else {
+    emptyState('timeCompareTable', 'ไม่มีข้อมูลเวลาที่ใช้คำนวณได้ตามตัวกรองนี้');
+  }
+
+  // Correlation: does more time actually mean more SKU / more Gate visits?
+  const spanArr = spanShips.map(s=>s.span);
+  const lineArr = spanShips.map(s=>s.lineCount);
+  const gateArr = spanShips.map(s=>s.gateList.length);
+  const rLines = pearsonCorr(spanArr, lineArr);
+  const rGates = pearsonCorr(spanArr, gateArr);
+  document.getElementById('corrCards').innerHTML = `
+    <div class="corr-card"><div class="cc-label">เวลารวม ↔ จำนวน SKU</div><div class="cc-value">${rLines!==null?rLines.toFixed(2):'-'}</div><div class="cc-note">${corrLabel(rLines)} — คำนวณจาก ${spanShips.length} เที่ยว</div></div>
+    <div class="corr-card"><div class="cc-label">เวลารวม ↔ จำนวน Gate</div><div class="cc-value">${rGates!==null?rGates.toFixed(2):'-'}</div><div class="cc-note">${corrLabel(rGates)} — คำนวณจาก ${spanShips.length} เที่ยว</div></div>
+  `;
+
+  // Stage breakdown bar chart (which stage eats the most time on average)
+  const stageItems = [
+    {label:'รอเข้า Gate', value: avgGateWait||0, valueLabel: avgGateWait!==null?fmtMin(avgGateWait):'-', color:'var(--orange-500)'},
+    {label:'Shipment Start − Weight Start', value: avgLt2||0, valueLabel: avgLt2!==null?fmtMin(avgLt2):'-', color:'var(--navy-700)'},
+    {label:'Center Process − Shipment Start', value: avgLt3||0, valueLabel: avgLt3!==null?fmtMin(avgLt3):'-', color:'var(--navy-400,#6b8cbf)'},
+  ].filter(it => it.value > 0 || it.valueLabel !== '-');
+  renderBars('chLostTimeStage', stageItems, {labelWidth:260, unit:'นาที'});
 
   // ---- Insights (dynamic) ----
   const busiestHour = hourRows.slice().sort((a,b)=>b.c-a.c)[0];
