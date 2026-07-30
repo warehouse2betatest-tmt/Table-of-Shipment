@@ -64,6 +64,7 @@
   .filter-bar{display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end; margin:20px 0 8px;
     position:sticky; top:var(--topbar-h); z-index:40; transition:box-shadow .2s ease;}
   .filter-bar.is-stuck{box-shadow:0 10px 24px rgba(10,38,71,.14);}
+  .filter-bar.panel:hover{transform:none;}
   .filter-field{display:flex; flex-direction:column; gap:5px;}
   .filter-field label{font-size:11px; color:var(--grey-600); font-weight:500; text-transform:uppercase; letter-spacing:.4px;}
   .filter-field select{
@@ -102,9 +103,9 @@
   .section-head h2 .bar{width:5px;height:20px;background:linear-gradient(180deg,var(--orange-500),var(--orange-600)); border-radius:4px; display:inline-block;}
   .section-head p{margin:2px 0 0; font-size:12.5px; color:var(--grey-400); font-weight:300;}
 
-  .panel{background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:22px; border:1px solid rgba(10,38,71,.05); transition:box-shadow .3s ease;}
+  .panel{background:var(--white); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:22px; border:1px solid rgba(10,38,71,.05); transition:box-shadow .3s ease, transform .3s cubic-bezier(.2,.8,.2,1);}
   .wrap > .panel{margin-bottom:18px;}
-  .panel:hover{box-shadow:var(--shadow-md);}
+  .panel:hover{box-shadow:var(--shadow-md); transform:translateY(-3px);}
   .panel h3{margin:0 0 4px; font-size:14.5px; color:var(--navy-900); font-weight:600;}
   .panel .sub{font-size:11.5px; color:var(--grey-400); font-weight:300; margin-bottom:14px;}
 
@@ -130,11 +131,38 @@
   thead th{text-align:left; font-weight:500; color:var(--grey-600); font-size:11px; text-transform:uppercase; letter-spacing:.4px; padding:9px 10px; border-bottom:2px solid var(--grey-100);}
   tbody td{padding:10px; border-bottom:1px solid var(--grey-100); color:var(--grey-800); font-weight:300;}
   tbody tr:hover{background:var(--grey-50);}
+  .pair-table tbody tr:nth-child(even), #topTableBody tr.top-row:nth-of-type(4n+1){background:rgba(10,38,71,.015);}
   .badge{padding:4px 9px; border-radius:100px; font-size:10.5px; font-weight:500; display:inline-block;}
   .badge.in{background:#e6f4ea; color:#1e7d3a;} .badge.out{background:var(--navy-100); color:var(--navy-800);} .badge.ret{background:#f1e9fb; color:#7a3ac0;}
   .badge.urg{background:var(--orange-100); color:var(--orange-600);} .badge.cus{background:#e6f0fb; color:#1a5fb4;} .badge.nor{background:var(--grey-100); color:var(--grey-600);}
   .bar-mini{height:6px; border-radius:4px; background:var(--grey-100); overflow:hidden; margin-top:4px;}
   .bar-mini i{display:block; height:100%; background:linear-gradient(90deg,var(--navy-700),var(--orange-500)); border-radius:4px;}
+
+  .pair-table td.pt-rank{width:28px; color:var(--grey-400); font-weight:600; font-size:11.5px;}
+  .pair-table td.pt-mat{font-weight:400; color:var(--navy-900); font-size:12.5px; line-height:1.4; max-width:0; width:38%;}
+  .pair-table td.pt-plus{width:20px; text-align:center; color:var(--orange-500); font-weight:700;}
+  .pair-table td.pt-val{width:150px;}
+  .pair-table .pt-valnum{font-weight:600; color:var(--navy-900); font-size:12px; white-space:nowrap; margin-bottom:3px;}
+
+  /* ---- Top 10 shipment table: click-to-expand detail ---- */
+  tr.top-row{cursor:pointer; transition:background .15s ease;}
+  tr.top-row:hover{background:var(--grey-50);}
+  tr.top-row.is-open{background:var(--navy-100);}
+  .row-chevron{display:inline-block; width:12px; margin-right:6px; color:var(--orange-500); font-size:10px; transition:transform .2s ease;}
+  tr.top-row.is-open .row-chevron{transform:rotate(90deg);}
+  tr.top-detail-row td{padding:0; border-bottom:1px solid var(--grey-100);}
+  .detail-grid{display:grid; grid-template-columns:1fr 1fr; gap:0; background:var(--grey-50); padding:16px 18px; animation:detailFadeIn .2s ease;}
+  @keyframes detailFadeIn{from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:none;}}
+  .detail-col{padding:0 14px;}
+  .detail-col:first-child{border-right:1px solid var(--grey-100);}
+  .detail-col-title{font-size:11px; text-transform:uppercase; letter-spacing:.4px; color:var(--grey-600); font-weight:600; margin-bottom:10px;}
+  .detail-gate-row, .detail-mat-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 0; border-bottom:1px dashed var(--grey-100); font-size:12.5px;}
+  .detail-gate-row:last-child, .detail-mat-row:last-child{border-bottom:none;}
+  .detail-gate-name{color:var(--navy-800); font-weight:500;}
+  .detail-gate-time{color:var(--orange-600); font-weight:600; white-space:nowrap;}
+  .detail-mat-name{color:var(--grey-800); font-weight:300; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .detail-mat-weight{color:var(--navy-800); font-weight:600; white-space:nowrap;}
+  @media (max-width:720px){ .detail-grid{grid-template-columns:1fr;} .detail-col:first-child{border-right:none; border-bottom:1px solid var(--grey-100); padding-bottom:12px; margin-bottom:12px;} }
 
   .insight-list{display:flex; flex-direction:column; gap:12px;}
   .insight{display:flex; gap:14px; padding:16px; border-radius:14px; background:var(--grey-50); border-left:4px solid var(--orange-500); transition:transform .3s ease, box-shadow .3s ease;}
@@ -275,7 +303,7 @@
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>สินค้าที่มักขึ้นด้วยกันบ่อยๆ &amp; Shipment หนักสุด</h2><p>คู่ Product Group และคู่ Material Desc ที่ปรากฏร่วมกันบ่อยที่สุด และ 10 อันดับ Shipment น้ำหนักสูงสุด</p></div></div>
     <div class="panel reveal"><h3>คู่สินค้าที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองกลุ่มร่วมกัน (Product Group)</div><div class="chart-box tall" id="chCooccur"></div></div>
-    <div class="panel reveal"><h3>คู่ Material Desc ที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองรายการนี้ร่วมกัน</div><div class="chart-box tall" id="chMaterialCooccur"></div></div>
+    <div class="panel reveal"><h3>คู่ Material Desc ที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองรายการนี้ร่วมกัน — เรียงจากบ่อยที่สุด</div><div id="chMaterialCooccur"></div></div>
     <div class="panel reveal"><h3>Top 10 Shipment น้ำหนักสูงสุด</h3>
       <table><thead><tr><th>#</th><th>Shipment</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th></tr></thead><tbody id="topTableBody"></tbody></table>
     </div>
@@ -479,6 +507,28 @@ function renderVehicleRows(containerId, rows){
       scroll.querySelectorAll('.v-count-fill').forEach((f,i)=> setTimeout(()=> f.style.width = f.dataset.target, i*50+25));
     });
   });
+}
+
+function renderPairTable(containerId, rows, opts={}){
+  // A simple two-column table reads much easier than a bar chart whose label is
+  // two long material names concatenated together -- one row per pair, each
+  // material in its own column, count and share on the right.
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  if(!rows.length){ emptyState(containerId); return; }
+  const maxVal = Math.max(...rows.map(r=>r.value), 1);
+  const body = rows.map((r,i)=>`
+    <tr>
+      <td class="pt-rank">${i+1}</td>
+      <td class="pt-mat" title="${r.a.replace(/"/g,'&quot;')}">${r.a}</td>
+      <td class="pt-plus">+</td>
+      <td class="pt-mat" title="${r.b.replace(/"/g,'&quot;')}">${r.b}</td>
+      <td class="pt-val">
+        <div class="pt-valnum">${r.valueLabel}</div>
+        <div class="bar-mini"><i style="width:${(r.value/maxVal*100).toFixed(0)}%"></i></div>
+      </td>
+    </tr>`).join('');
+  container.innerHTML = `<table class="pair-table"><thead><tr><th>#</th><th>สินค้า A</th><th></th><th>สินค้า B</th><th>ขึ้นด้วยกัน</th></tr></thead><tbody>${body}</tbody></table>`;
 }
 
 function animateCount(el, target, decimals=0){
@@ -818,19 +868,52 @@ function render(model){
   });
   const matPairShipmentTotal = shipmentMaterials.size;
   const matPairRows = Object.entries(matPairCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
-  renderBars('chMaterialCooccur', matPairRows.map(([key,value])=>{
-    return {label:key, value, valueLabel:value+' เที่ยว ('+fmtPct(value,matPairShipmentTotal)+')', color:`linear-gradient(90deg, ${NAVY}, ${ORANGE2})`, tooltip:`<b>${key}</b><br>${value} เที่ยว (${fmtPct(value,matPairShipmentTotal)})`};
-  }), {unit:'เที่ยว', labelWidth:340, labelLines:3});
+  renderPairTable('chMaterialCooccur', matPairRows.map(([key,value])=>{
+    const [a,b] = matPairLabels[key];
+    return {a, b, value, valueLabel:value+' เที่ยว ('+fmtPct(value,matPairShipmentTotal)+')'};
+  }));
 
-  // ---- Top 10 heaviest table ----
+  // ---- Top 10 heaviest table (click a row to expand: gates + materials) ----
   const top10 = shipmentList.slice().sort((a,b)=>b.weight-a.weight).slice(0,10);
   const typeBadge = t => /inbound/i.test(t) ? '<span class="badge in">ขาเข้า</span>' : /return/i.test(t) ? '<span class="badge ret">คืนสินค้า</span>' : '<span class="badge out">ขาออก</span>';
   const statusBadge = s => /urgent/i.test(s) ? '<span class="badge urg">ด่วน</span>' : /customer/i.test(s) ? '<span class="badge cus">ลูกค้ารับเอง</span>' : '<span class="badge nor">ปกติ</span>';
   const maxW = Math.max(...top10.map(r=>r.weight),1);
-  document.getElementById('topTableBody').innerHTML = top10.map((r,i)=>`
-    <tr><td style="font-weight:600;color:var(--navy-800)">${i+1}</td><td>${r.id}</td><td>${typeBadge(r.jobtype)}</td><td>${statusBadge(r.status)}</td><td>${r.vehicleCode}</td>
-    <td>${r.weight.toLocaleString(undefined,{maximumFractionDigits:1})}<div class="bar-mini"><i style="width:${(r.weight/maxW*100).toFixed(0)}%"></i></div></td><td>${r.lineCount}</td></tr>
-  `).join('');
+
+  const linesByShipment = new Map();
+  lines.forEach(l=>{ if(!linesByShipment.has(l.shipment)) linesByShipment.set(l.shipment, []); linesByShipment.get(l.shipment).push(l); });
+  const gatesByShipment = new Map();
+  gateVisits.forEach(v=>{ if(!gatesByShipment.has(v.shipment)) gatesByShipment.set(v.shipment, []); gatesByShipment.get(v.shipment).push(v); });
+
+  document.getElementById('topTableBody').innerHTML = top10.map((r,i)=>{
+    const shipLines = linesByShipment.get(r.id) || [];
+    const shipGates = gatesByShipment.get(r.id) || []; // keep original (chronological) order from the sheet
+    const gateChips = shipGates.length
+      ? shipGates.map(g=>`<div class="detail-gate-row"><span class="detail-gate-name">Gate ${g.gate}</span><span class="detail-gate-time">${g.minutes!=null ? fmtMin(g.minutes) : 'ไม่มีข้อมูลเวลา'}</span></div>`).join('')
+      : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูล Gate</div>`;
+    const matRowsHtml = shipLines.length
+      ? shipLines.map(l=>`<div class="detail-mat-row"><span class="detail-mat-name" title="${(l.materialDesc||'').replace(/"/g,'&quot;')}">${l.materialDesc || '(ไม่ระบุ)'}</span><span class="detail-mat-weight">${l.weight.toLocaleString(undefined,{maximumFractionDigits:0})} กก.</span></div>`).join('')
+      : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูลสินค้า</div>`;
+    return `
+    <tr class="top-row" data-sid="${r.id}">
+      <td style="font-weight:600;color:var(--navy-800)"><span class="row-chevron">▸</span>${i+1}</td>
+      <td>${r.id}</td><td>${typeBadge(r.jobtype)}</td><td>${statusBadge(r.status)}</td><td>${r.vehicleCode}</td>
+      <td>${r.weight.toLocaleString(undefined,{maximumFractionDigits:1})}<div class="bar-mini"><i style="width:${(r.weight/maxW*100).toFixed(0)}%"></i></div></td><td>${r.lineCount}</td>
+    </tr>
+    <tr class="top-detail-row" data-sid-detail="${r.id}" style="display:none;">
+      <td colspan="7">
+        <div class="detail-grid">
+          <div class="detail-col">
+            <div class="detail-col-title">Gate ที่ผ่าน (${shipGates.length}) — เวลาแต่ละจุด</div>
+            ${gateChips}
+          </div>
+          <div class="detail-col">
+            <div class="detail-col-title">สินค้าในเที่ยวนี้ (${shipLines.length} รายการ)</div>
+            ${matRowsHtml}
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
 
   // ---- Insights (dynamic) ----
   const busiestHour = hourRows.slice().sort((a,b)=>b.c-a.c)[0];
@@ -951,6 +1034,24 @@ async function loadData(isRefresh){
 }
 
 document.getElementById('btnRefresh').addEventListener('click', ()=> loadData(true));
+
+// Click-to-expand for the Top 10 shipment table. Delegated on the tbody (set up
+// once) so it keeps working across every re-render triggered by filter changes,
+// since only the tbody's innerHTML is replaced, not the tbody element itself.
+(function setupTopTableExpand(){
+  const tbody = document.getElementById('topTableBody');
+  if(!tbody) return;
+  tbody.addEventListener('click', (e)=>{
+    const row = e.target.closest('tr.top-row');
+    if(!row || !tbody.contains(row)) return;
+    const sid = row.dataset.sid;
+    const detail = tbody.querySelector(`tr.top-detail-row[data-sid-detail="${CSS.escape(sid)}"]`);
+    if(!detail) return;
+    const opening = detail.style.display === 'none';
+    detail.style.display = opening ? 'table-row' : 'none';
+    row.classList.toggle('is-open', opening);
+  });
+})();
 
 // Keep the sticky filter bar pinned exactly below the topbar (measured, not
 // guessed, so it holds up if the topbar's height ever changes) and give it a
