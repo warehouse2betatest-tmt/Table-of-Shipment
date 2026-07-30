@@ -261,6 +261,7 @@
   <div class="wrap">
     <div class="filter-bar panel reveal" id="filterBar">
       <div class="filter-field"><label>เดือน</label><select id="fltMonth"><option value="">ทั้งหมด</option></select></div>
+      <div class="filter-field"><label>ประเภทงาน (Job type)</label><select id="fltJobType"><option value="">ทั้งหมด</option></select></div>
       <div class="filter-field"><label>ประเภทรถ</label><select id="fltVehicle"><option value="">ทั้งหมด</option></select></div>
       <div class="filter-field"><label>Gate</label><select id="fltGate"><option value="">ทั้งหมด</option></select></div>
       <button id="fltReset">ล้างตัวกรอง</button>
@@ -332,6 +333,18 @@ const VEHICLE_TYPE_MAP = {
   'รถPick up':'Pickup', 'รถ Pick up':'Pickup',
   'รถพ่วงแม่-ลูก 22 ล้อ':'พ่วงแม่-ลูก', 'รถพ่วงแม่-ลูก 20 ล้อ':'พ่วงแม่-ลูก', 'รถพ่วงแม่-ลูก':'พ่วงแม่-ลูก',
 };
+
+// Classify a raw vehicle-type string into one of the 7 standardized codes.
+// Exact lookup first; if the sheet introduces a new variant we haven't seen
+// (e.g. a new wheel-count suffix), fall back to substring matching on
+// "พ่วงแม่-ลูก" so any such variant still consolidates into one bucket
+// instead of showing up as its own separate, unmapped filter option.
+function classifyVehicleType(raw){
+  if(!raw) return 'อื่นๆ';
+  if(VEHICLE_TYPE_MAP[raw]) return VEHICLE_TYPE_MAP[raw];
+  if(raw.includes('พ่วงแม่-ลูก')) return 'พ่วงแม่-ลูก';
+  return raw;
+}
 
 // ============================================================
 // CSV parsing
@@ -685,7 +698,7 @@ function buildModel(csvText){
       if(span > 900) span = null;
     }
     sh.span = span;
-    sh.vehicleCode = VEHICLE_TYPE_MAP[sh.vehicleRaw] || sh.vehicleRaw || 'อื่นๆ';
+    sh.vehicleCode = classifyVehicleType(sh.vehicleRaw);
     sh.gateList = Array.from(sh.gates);
     shipmentList.push(sh);
   });
@@ -694,11 +707,12 @@ function buildModel(csvText){
 }
 
 function filterModel(full, filters){
-  const { month, vehicle, gate } = filters;
+  const { month, vehicle, gate, jobtype } = filters;
   const shipmentList = full.shipmentList.filter(s =>
     (!month || s.month === month) &&
     (!vehicle || s.vehicleCode === vehicle) &&
-    (!gate || s.gateList.includes(gate))
+    (!gate || s.gateList.includes(gate)) &&
+    (!jobtype || s.jobtype === jobtype)
   );
   const idSet = new Set(shipmentList.map(s=>s.id));
   const lines = full.lines.filter(l => idSet.has(l.shipment));
@@ -941,23 +955,48 @@ function render(model){
 // ============================================================
 let FULL_MODEL = null;
 
+function jobTypeLabel(t){
+  return /inbound/i.test(t) ? 'ขาเข้า (Inbound)' : /return/i.test(t) ? 'คืนสินค้า (Return)' : /outbound/i.test(t) ? 'ขาออก (Outbound)' : t;
+}
+
+// Clear every <option> except the first ("ทั้งหมด" / all) placeholder, so this
+// can be safely called again on every refresh without piling up duplicates.
+function resetSelectOptions(sel){
+  while(sel.options.length > 1) sel.remove(1);
+}
+
 function populateFilters(full){
   const months = Array.from(new Set(full.shipmentList.map(s=>s.month).filter(Boolean))).sort();
   const vehicles = Array.from(new Set(full.shipmentList.map(s=>s.vehicleCode))).sort();
   const gates = Array.from(new Set(full.gateVisits.map(v=>v.gate))).sort();
+  const jobtypes = Array.from(new Set(full.shipmentList.map(s=>s.jobtype).filter(Boolean))).sort();
+
   const monthSel = document.getElementById('fltMonth');
+  resetSelectOptions(monthSel);
   months.forEach(m=>{ const opt=document.createElement('option'); opt.value=m; opt.textContent=monthLabel(m); monthSel.appendChild(opt); });
+
   const vehSel = document.getElementById('fltVehicle');
+  resetSelectOptions(vehSel);
   vehicles.forEach(v=>{ const opt=document.createElement('option'); opt.value=v; opt.textContent=v; vehSel.appendChild(opt); });
+
   const gateSel = document.getElementById('fltGate');
+  resetSelectOptions(gateSel);
   gates.forEach(g=>{ const opt=document.createElement('option'); opt.value=g; opt.textContent='Gate '+g; gateSel.appendChild(opt); });
+
+  const jtSel = document.getElementById('fltJobType');
+  if(jtSel){
+    resetSelectOptions(jtSel);
+    jobtypes.forEach(t=>{ const opt=document.createElement('option'); opt.value=t; opt.textContent=jobTypeLabel(t); jtSel.appendChild(opt); });
+  }
 }
 
 function applyFiltersAndRerender(){
+  const jtEl = document.getElementById('fltJobType');
   const filters = {
     month: document.getElementById('fltMonth').value || null,
     vehicle: document.getElementById('fltVehicle').value || null,
     gate: document.getElementById('fltGate').value || null,
+    jobtype: jtEl ? (jtEl.value || null) : null,
   };
   const filtered = filterModel(FULL_MODEL, filters);
   document.getElementById('fltSummary').textContent = `แสดง ${filtered.shipmentList.length} จาก ${FULL_MODEL.shipmentList.length} เที่ยว`;
@@ -975,6 +1014,7 @@ async function loadData(isRefresh){
     month: document.getElementById('fltMonth').value,
     vehicle: document.getElementById('fltVehicle').value,
     gate: document.getElementById('fltGate').value,
+    jobtype: document.getElementById('fltJobType') ? document.getElementById('fltJobType').value : '',
   } : null;
 
   if(isRefresh && btn){ btn.disabled = true; btn.classList.add('spinning'); }
@@ -987,16 +1027,16 @@ async function loadData(isRefresh){
     populateFilters(FULL_MODEL);
     if(prevFilters){
       // re-apply prior filter selections if the option still exists after refresh
-      ['fltMonth','fltVehicle','fltGate'].forEach(id=>{
+      ['fltMonth','fltVehicle','fltGate','fltJobType'].forEach(id=>{
         const key = id.replace('flt','').toLowerCase();
         const val = prevFilters[key];
         const sel = document.getElementById(id);
-        if(val && [...sel.options].some(o=>o.value===val)) sel.value = val;
+        if(sel && val && [...sel.options].some(o=>o.value===val)) sel.value = val;
       });
     }
     if(!filtersWired){
-      ['fltMonth','fltVehicle','fltGate'].forEach(id=> document.getElementById(id).addEventListener('change', applyFiltersAndRerender));
-      document.getElementById('fltReset').addEventListener('click', ()=>{ ['fltMonth','fltVehicle','fltGate'].forEach(id=>document.getElementById(id).value=''); applyFiltersAndRerender(); });
+      ['fltMonth','fltVehicle','fltGate','fltJobType'].forEach(id=>{ const el = document.getElementById(id); if(el) el.addEventListener('change', applyFiltersAndRerender); });
+      document.getElementById('fltReset').addEventListener('click', ()=>{ ['fltMonth','fltVehicle','fltGate','fltJobType'].forEach(id=>{ const el = document.getElementById(id); if(el) el.value=''; }); applyFiltersAndRerender(); });
       filtersWired = true;
     }
 
