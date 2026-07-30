@@ -156,6 +156,21 @@
   .corr-card .cc-value{font-size:26px; font-weight:700; color:var(--navy-900);}
   .corr-card .cc-note{font-size:11.5px; color:var(--grey-600); margin-top:6px; line-height:1.5;}
 
+  /* ---- Process funnel ---- */
+  .funnel-wrap{display:flex; flex-direction:column; gap:14px; padding:6px 0;}
+  .funnel-row{display:flex; flex-direction:column; gap:5px;}
+  .funnel-label{font-size:12.5px; font-weight:500; color:var(--navy-900);}
+  .funnel-track{height:26px; border-radius:8px; background:var(--grey-100); overflow:hidden;}
+  .funnel-fill{height:100%; border-radius:8px; background:linear-gradient(90deg,var(--navy-700),var(--orange-500)); transition:width 1s cubic-bezier(.2,.8,.2,1);}
+  .funnel-meta{font-size:11.5px; color:var(--grey-600);}
+  .funnel-meta b{color:var(--navy-900); font-weight:600;}
+
+  /* ---- Customer Pareto table ---- */
+  .time-table tr.pareto-hi{background:rgba(255,107,53,.06);}
+  .time-table tr.pareto-hi td.tt-rank{color:var(--orange-600); font-weight:700;}
+  .pareto-cum-track{height:6px; border-radius:4px; background:var(--grey-100); overflow:hidden; margin-top:4px; width:90px;}
+  .pareto-cum-track i{display:block; height:100%; background:linear-gradient(90deg,var(--navy-700),var(--orange-500)); border-radius:4px;}
+
   /* ---- Top 10 shipment table: click-to-expand detail ---- */
   tr.top-row{cursor:pointer; transition:background .15s ease;}
   tr.top-row:hover{background:var(--grey-50);}
@@ -289,6 +304,10 @@
       <div class="panel"><h3>ปัญหาที่พบระหว่างงาน (Issue)</h3><div class="sub">จำนวนเที่ยวรถที่มีหมายเหตุปัญหา</div><div class="chart-box" id="chIssue"></div></div>
     </div>
 
+    <div class="section-head reveal"><div><h2><span class="bar"></span>แนวโน้มรายวัน (Daily Trend)</h2><p>จำนวนเที่ยวและน้ำหนักรวมในแต่ละวัน ตามช่วงเวลาที่เลือกในตัวกรอง</p></div></div>
+    <div class="panel reveal"><h3>จำนวน Shipment ต่อวัน</h3><div class="sub">นับจำนวน Shipment ต่อ 1 วัน ตามวันที่ (Shipment Date) เรียงตามลำดับเวลา</div><div class="chart-box" style="height:auto;" id="chDailyCount"></div></div>
+    <div class="panel reveal"><h3>น้ำหนักรวมต่อวัน (ตัน)</h3><div class="sub">รวมน้ำหนัก (Weight) ของทุก Shipment ในวันนั้นๆ หารด้วย 1,000 เพื่อแปลงเป็นตัน</div><div class="chart-box" style="height:auto;" id="chDailyWeight"></div></div>
+
     <div style="margin-top:24px;" class="reveal"><div class="alert-banner" id="alertBanner"></div></div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>เวลาที่ใช้ต่อประเภทรถ และ ต่อ Gate</h2><p>Running Time = Gate Check out − Gate Check in (นาที) เฉลี่ยและสูงสุด</p></div></div>
@@ -306,7 +325,7 @@
     <div class="section-head reveal"><div><h2><span class="bar"></span>การใช้งานยานพาหนะ (Fleet Utilization)</h2><p>จัดกลุ่มตามตาราง Type: TL / 10W / 12W / 6W / 4W / Pickup / พ่วงแม่-ลูก</p></div></div>
     <div class="grid-2 reveal">
       <div class="panel"><h3>จำนวนเที่ยว vs น้ำหนัก แยกตามประเภทรถ</h3><div class="sub">เรียงจากน้ำหนักรวมมากไปน้อย</div><div class="chart-box tall" id="chVehicle"></div></div>
-      <div class="panel"><h3>สัดส่วนน้ำหนักตามประเภทรถ</h3><div class="chart-box tall" id="chVehicleShare"></div><div class="legend-row" id="legVehicleShare"></div></div>
+      <div class="panel"><h3>สัดส่วนน้ำหนักตามประเภทรถ</h3><div class="sub">% ของน้ำหนักรวมทั้งหมด แยกตามประเภทรถ</div><div class="chart-box tall" id="chVehicleShare"></div><div class="legend-row" id="legVehicleShare"></div></div>
     </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>มุมมองสินค้า &amp; ลูกค้า</h2><p>Material Desc ที่หนักที่สุดและมีเที่ยวรถบ่อยที่สุด และ Sold To Name ที่มีเที่ยวรถมากที่สุด</p></div></div>
@@ -314,10 +333,19 @@
     <div class="panel reveal"><h3>สินค้า (Material Desc) เที่ยวรถบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้านี้ปรากฏ (ไม่นับตามน้ำหนัก)</div><div class="chart-box tall" id="chMaterialFreq"></div></div>
     <div class="panel reveal"><h3>ลูกค้า (Sold To Name) เที่ยวรถมากที่สุด (Top 10)</h3><div class="sub">นับจำนวน Shipment ต่อลูกค้า (ตัดคำ บริษัท/จำกัด/ห้างหุ้นส่วน ออกแล้ว)</div><div class="chart-box tall" id="chCustomer"></div></div>
 
+    <div class="section-head reveal"><div><h2><span class="bar"></span>สัดส่วนลูกค้าแบบ Pareto (80/20)</h2><p>ลูกค้ากี่รายที่รวมกันสร้างน้ำหนักขนส่ง 80% และมีลูกค้าที่ซื้อครั้งเดียวมากแค่ไหน</p></div></div>
+    <div class="kpi-grid reveal" id="kpiPareto"></div>
+    <div class="panel reveal">
+      <h3>อันดับลูกค้าตามน้ำหนักสะสม (Pareto)</h3>
+      <div class="sub">เรียงลูกค้าจากน้ำหนักรวมมากไปน้อย แล้วสะสม % ของน้ำหนักทั้งหมดไปเรื่อยๆ — แถวที่แรเงาสีส้มคือกลุ่มลูกค้าที่รวมกันแล้วถึง 80% ของน้ำหนักทั้งหมด (แสดงสูงสุด 20 อันดับแรก)</div>
+      <div id="paretoTable"></div>
+    </div>
+
     <div class="section-head reveal"><div><h2><span class="bar"></span>สินค้าที่มักขึ้นด้วยกันบ่อยๆ &amp; Shipment หนักสุด</h2><p>คู่ Product Group และคู่ Material Desc ที่ปรากฏร่วมกันบ่อยที่สุด และ 10 อันดับ Shipment น้ำหนักสูงสุด</p></div></div>
     <div class="panel reveal"><h3>คู่สินค้าที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองกลุ่มร่วมกัน (Product Group)</div><div class="chart-box tall" id="chCooccur"></div></div>
     <div class="panel reveal"><h3>คู่ Material Desc ที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองรายการนี้ร่วมกัน — เรียงจากบ่อยที่สุด</div><div id="chMaterialCooccur"></div></div>
     <div class="panel reveal"><h3>Top 10 Shipment น้ำหนักสูงสุด</h3>
+      <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูรายละเอียด Gate ที่ผ่านและสินค้าในเที่ยวนั้น</div>
       <table><thead><tr><th>#</th><th>Shipment</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th></tr></thead><tbody id="topTableBody"></tbody></table>
     </div>
 
@@ -334,6 +362,20 @@
       <div id="corrCards" class="kpi-grid" style="grid-template-columns:repeat(2,1fr);"></div>
     </div>
     <div class="panel reveal"><h3>จุดที่เสียเวลามากที่สุดในกระบวนการ (เฉลี่ยต่อเที่ยว)</h3><div class="sub">ใช้ค่า Lost Time ที่ระบบต้นทางคำนวณไว้แล้วโดยตรง (ไม่ได้คำนวณซ้ำ): รอเข้า Gate เฉลี่ยต่อครั้ง / Shipment Start−Weight Start / Center Process−Shipment Start (นาที)</div><div class="chart-box tall" id="chLostTimeStage"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>Funnel กระบวนการทำงาน (Process Funnel)</h2><p>ดูว่า Shipment หลุด/ค้างอยู่ที่ขั้นไหนมากที่สุด ตั้งแต่ชั่งน้ำหนักเริ่มต้นจนออก Gate</p></div></div>
+    <div class="panel reveal"><h3>Shipment ผ่านแต่ละขั้นตอนกี่เที่ยว</h3><div class="sub">นับจำนวน Shipment ที่มีข้อมูลบันทึกไว้ในแต่ละสเตจ (Weight Start → Shipment Time → Center Time → Weight Success → Gate Check out) เทียบกับจำนวน Shipment ทั้งหมดตามตัวกรองปัจจุบัน — ขั้นไหนที่จำนวนหล่นเยอะ แปลว่าเที่ยวรถจำนวนมากไม่ถูกบันทึกข้อมูล ณ ขั้นนั้น ควรตรวจสอบกระบวนการหน้างาน</div><div id="chProcessFunnel"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>เที่ยวรถที่ส่งหลายปลายทาง (Multi-Destination Delivery)</h2><p>1 Shipment อาจมีสินค้าหลายรายการที่ต้องส่งคนละปลายทาง (Ship To Name ต่างกัน) — วิเคราะห์ว่ามีกี่เที่ยวที่เป็นแบบนี้ และเที่ยวไหนส่งหลายปลายทางที่สุด</p></div></div>
+    <div class="kpi-grid reveal" id="kpiMultiDest"></div>
+    <div class="panel reveal"><h3>จำนวนปลายทางต่อ 1 Shipment</h3><div class="sub">นับจำนวน Ship To Name ที่แตกต่างกันในแต่ละ Shipment (1 ปลายทาง = ส่งที่เดียว, 2+ = ส่งหลายจุดในเที่ยวเดียว)</div><div class="chart-box" id="chMultiDest"></div></div>
+    <div class="panel reveal"><h3>Top 10 Shipment ที่ส่งหลายปลายทางที่สุด</h3><div class="sub">เรียงจากจำนวน Ship To Name ที่แตกต่างกันมากที่สุดในเที่ยวเดียว</div><div id="multiDestTable"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>ปัญหาที่พบ แยกตาม Gate และประเภทรถ (Issue Cross-tab)</h2><p>Gate หรือประเภทรถไหนที่มีสัดส่วน Shipment ที่มีปัญหา (Issue) สูงที่สุด</p></div></div>
+    <div class="grid-2 reveal">
+      <div class="panel"><h3>อัตราการเกิดปัญหา แยกตาม Gate</h3><div class="sub">% ของ Shipment ที่ผ่าน Gate นั้นแล้วมีหมายเหตุปัญหา (Shipment ที่ผ่านหลาย Gate จะถูกนับในทุก Gate ที่ผ่าน) — วงเล็บคือ จำนวนที่มีปัญหา/จำนวนที่ผ่าน Gate นั้นทั้งหมด</div><div class="chart-box tall" id="chIssueByGate"></div></div>
+      <div class="panel"><h3>อัตราการเกิดปัญหา แยกตามประเภทรถ</h3><div class="sub">% ของ Shipment แต่ละประเภทรถที่มีหมายเหตุปัญหา — วงเล็บคือ จำนวนที่มีปัญหา/จำนวนเที่ยวทั้งหมดของประเภทรถนั้น</div><div class="chart-box tall" id="chIssueByVehicle"></div></div>
+    </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>ข้อเสนอแนะเชิงปฏิบัติการ</h2><p>สรุปประเด็นสำคัญจากข้อมูล (ตามตัวกรองปัจจุบัน)</p></div></div>
     <div class="panel reveal"><div class="insight-list" id="insightList"></div></div>
@@ -439,6 +481,17 @@ function parseThaiDateToMonthKey(dstr){
 function monthLabel(key){
   const [y,mo] = key.split('-');
   return THAI_MONTHS[parseInt(mo,10)] + ' ' + (parseInt(y,10)+543);
+}
+const THAI_MONTHS_SHORT = ['','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+function parseThaiDateToDayKey(dstr){
+  if(!dstr) return null;
+  const m = String(dstr).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(!m) return null;
+  return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+}
+function dayLabel(key){
+  const [,mo,d] = key.split('-');
+  return `${parseInt(d,10)} ${THAI_MONTHS_SHORT[parseInt(mo,10)]}`;
 }
 
 // ============================================================
@@ -587,6 +640,107 @@ function renderPairTable(containerId, rows, opts={}){
   container.innerHTML = `<table class="pair-table"><thead><tr><th>#</th><th>สินค้า A</th><th></th><th>สินค้า B</th><th>ขึ้นด้วยกัน</th></tr></thead><tbody>${body}</tbody></table>`;
 }
 
+function renderFunnel(containerId, stages){
+  // Horizontal step funnel: each row's fill-width is % of the FIRST stage's count
+  // (overall completion), and the small note under it is % of the PREVIOUS stage
+  // (stage-to-stage drop-off) -- together they show both where the big picture
+  // loss is and exactly which single step causes it.
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  if(!stages.length || !stages[0].value){ emptyState(containerId); return; }
+  const first = stages[0].value;
+  const rows = stages.map((s,i)=>{
+    const pctOfFirst = first>0 ? (s.value/first*100) : 0;
+    const prev = i>0 ? stages[i-1].value : s.value;
+    const pctOfPrev = prev>0 ? (s.value/prev*100) : 100;
+    const dropNote = i===0 ? 'จุดเริ่มต้น' : (pctOfPrev>=99.95 ? 'ไม่มีการหลุดจากขั้นก่อนหน้า' : `เหลือ ${pctOfPrev.toFixed(1)}% จากขั้นก่อนหน้า (หลุด ${(100-pctOfPrev).toFixed(1)}%)`);
+    return `<div class="funnel-row">
+      <div class="funnel-label">${s.label}</div>
+      <div class="funnel-track"><div class="funnel-fill" style="width:0%" data-target="${pctOfFirst.toFixed(1)}%"></div></div>
+      <div class="funnel-meta"><b>${s.value.toLocaleString()}</b> เที่ยว (${pctOfFirst.toFixed(1)}% ของทั้งหมด) · ${dropNote}</div>
+    </div>`;
+  }).join('');
+  container.innerHTML = `<div class="funnel-wrap">${rows}</div>`;
+  requestAnimationFrame(()=>{
+    container.querySelectorAll('.funnel-fill').forEach((f,i)=> setTimeout(()=> f.style.width = f.dataset.target, i*80));
+  });
+}
+
+function renderLineChart(containerId, points, opts={}){
+  // Vanilla-SVG line/area chart -- no chart library dependency, consistent with
+  // the rest of the dashboard. viewBox + width:100% lets it stretch to fit the
+  // panel at any screen size without recalculating point positions.
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  if(!points.length){ emptyState(containerId); return; }
+  const W = opts.width || 900, H = opts.height || 260;
+  const padL = 50, padR = 16, padT = 16, padB = 34;
+  const innerW = W - padL - padR, innerH = H - padT - padB;
+  const maxY = Math.max(...points.map(p=>p.y), 1) * 1.15;
+  const n = points.length;
+  const xStep = n > 1 ? innerW/(n-1) : 0;
+  const xAt = i => padL + i*xStep;
+  const yAt = v => padT + innerH - (v/maxY)*innerH;
+  const color = opts.color || '#164a7a';
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('width','100%'); svg.setAttribute('height', H);
+  svg.setAttribute('preserveAspectRatio','none');
+
+  const gridCount = 4;
+  for(let g=0; g<=gridCount; g++){
+    const v = maxY * g / gridCount, y = yAt(v);
+    const line = document.createElementNS(svgNS,'line');
+    line.setAttribute('x1', padL); line.setAttribute('x2', W-padR);
+    line.setAttribute('y1', y); line.setAttribute('y2', y);
+    line.setAttribute('stroke', '#eef2f7'); line.setAttribute('stroke-width', 1);
+    svg.appendChild(line);
+    const txt = document.createElementNS(svgNS,'text');
+    txt.setAttribute('x', padL-8); txt.setAttribute('y', y+4); txt.setAttribute('text-anchor','end');
+    txt.setAttribute('font-size','10'); txt.setAttribute('fill', '#8a97a8');
+    txt.textContent = opts.yFmt ? opts.yFmt(v) : Math.round(v).toLocaleString();
+    svg.appendChild(txt);
+  }
+
+  let areaD = `M ${xAt(0)} ${yAt(0)} `;
+  points.forEach((p,i)=> areaD += `L ${xAt(i)} ${yAt(p.y)} `);
+  areaD += `L ${xAt(n-1)} ${yAt(0)} Z`;
+  const area = document.createElementNS(svgNS,'path');
+  area.setAttribute('d', areaD); area.setAttribute('fill', color); area.setAttribute('opacity','0.08');
+  svg.appendChild(area);
+
+  let lineD = '';
+  points.forEach((p,i)=>{ lineD += (i===0?'M ':'L ') + xAt(i).toFixed(1) + ' ' + yAt(p.y).toFixed(1) + ' '; });
+  const linePath = document.createElementNS(svgNS,'path');
+  linePath.setAttribute('d', lineD); linePath.setAttribute('fill','none');
+  linePath.setAttribute('stroke', color); linePath.setAttribute('stroke-width', 2.5);
+  linePath.setAttribute('stroke-linejoin','round'); linePath.setAttribute('stroke-linecap','round');
+  svg.appendChild(linePath);
+
+  const labelEvery = Math.max(1, Math.ceil(n / (opts.maxLabels||12)));
+  points.forEach((p,i)=>{
+    const cx = xAt(i), cy = yAt(p.y);
+    const dot = document.createElementNS(svgNS,'circle');
+    dot.setAttribute('cx',cx.toFixed(1)); dot.setAttribute('cy',cy.toFixed(1)); dot.setAttribute('r', 3.5);
+    dot.setAttribute('fill','#fff'); dot.setAttribute('stroke', color); dot.setAttribute('stroke-width',2);
+    dot.style.cursor = 'pointer';
+    dot.addEventListener('mouseenter', e=>showTip(e, `<b>${p.x}</b><br>${opts.tooltipFmt ? opts.tooltipFmt(p.y) : p.y.toLocaleString()}`));
+    dot.addEventListener('mousemove', moveTip); dot.addEventListener('mouseleave', hideTip);
+    svg.appendChild(dot);
+    if(i % labelEvery === 0 || i === n-1){
+      const lbl = document.createElementNS(svgNS,'text');
+      lbl.setAttribute('x', cx); lbl.setAttribute('y', H-10); lbl.setAttribute('text-anchor','middle');
+      lbl.setAttribute('font-size','10'); lbl.setAttribute('fill','#8a97a8');
+      lbl.textContent = p.x;
+      svg.appendChild(lbl);
+    }
+  });
+
+  container.innerHTML = ''; container.appendChild(svg);
+}
+
 function animateCount(el, target, decimals=0){
   const dur = 1000, start = performance.now();
   function step(now){
@@ -722,7 +876,7 @@ function buildModel(csvText){
       shipments.set(sid, {
         id: sid, jobtype: (r[idx.jobtype]||'').trim(), status: (r[idx.status]||'').trim(),
         vehicleRaw: (r[idx.vehicle]||'').trim(), soldTo: (r[idx.soldTo]||'').trim(),
-        date: dateStr, month: parseThaiDateToMonthKey(dateStr),
+        date: dateStr, month: parseThaiDateToMonthKey(dateStr), dateKey: parseThaiDateToDayKey(dateStr),
         weight: 0, lineCount: 0, issue: '', gates: new Set(),
         firstIn: null, lastOut: null,
         // สเตจต่างๆ ของกระบวนการ (นาที) — ค่าคงที่ต่อ 1 เที่ยว จึงอ่านจากแถวแรกที่เจอพอ
@@ -731,6 +885,11 @@ function buildModel(csvText){
         d3: parseDuration(r[idx.dCenter]),   // Weight Success - Center
         lt2: parseDuration(r[idx.ltShip]),   // Lost Time: Shipment Start - Weight Start
         lt3: parseDuration(r[idx.ltCenter]), // Lost Time: Center Process - Shipment Start
+        // มีข้อมูล ณ สเตจนั้นหรือไม่ (ใช้ทำ Funnel กระบวนการ) — เช็คจากแถวแรกที่เจอของ shipment นี้
+        hasWStart: !!(r[idx.wStart] && r[idx.wStart].trim()),
+        hasShipTime: !!(r[idx.shipTime] && r[idx.shipTime].trim()),
+        hasCenterTime: !!(r[idx.centerTime] && r[idx.centerTime].trim()),
+        hasWSuccess: !!(r[idx.wSuccess] && r[idx.wSuccess].trim()),
       });
     }
     const sh = shipments.get(sid);
@@ -1034,13 +1193,38 @@ function render(model){
   if(top10Span.length){
     document.getElementById('timeCompareTable').innerHTML = `
       <table class="time-table"><thead><tr><th>#</th><th>Shipment</th><th>เวลารวม</th><th>SKU (จำนวนรายการ)</th><th>Gate ที่ผ่าน</th></tr></thead><tbody>
-      ${top10Span.map((s,i)=>`<tr>
-        <td class="tt-rank">${i+1}</td>
-        <td class="tt-id">${s.id}</td>
-        <td class="tt-num">${fmtMin(s.span)}</td>
-        <td class="tt-num">${s.lineCount} ${rankChip(linesRank.get(s.id))}</td>
-        <td class="tt-num">${s.gateList.length} ${rankChip(gatesRank.get(s.id))}</td>
-      </tr>`).join('')}
+      ${top10Span.map((s,i)=>{
+        const shipLines = linesByShipment.get(s.id) || [];
+        const shipGates = gatesByShipment.get(s.id) || [];
+        const gateChips = shipGates.length
+          ? shipGates.map(g=>`<div class="detail-gate-row"><span class="detail-gate-name">Gate ${g.gate}</span><span class="detail-gate-time">${g.minutes!=null ? fmtMin(g.minutes) : 'ไม่มีข้อมูลเวลา'}${g.waitMinutes!=null ? ' · รอ '+fmtMin(g.waitMinutes) : ''}</span></div>`).join('')
+          : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูล Gate</div>`;
+        const matRowsHtml = shipLines.length
+          ? shipLines.map(l=>`<div class="detail-mat-row"><span class="detail-mat-name" title="${(l.materialDesc||'').replace(/"/g,'&quot;')}">${l.materialDesc || '(ไม่ระบุ)'}</span><span class="detail-mat-weight">${l.weight.toLocaleString(undefined,{maximumFractionDigits:0})} กก.</span></div>`).join('')
+          : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูลสินค้า</div>`;
+        return `
+        <tr class="tt-row top-row" data-sid="${s.id}">
+          <td class="tt-rank"><span class="row-chevron">▸</span>${i+1}</td>
+          <td class="tt-id">${s.id}</td>
+          <td class="tt-num">${fmtMin(s.span)}</td>
+          <td class="tt-num">${s.lineCount} ${rankChip(linesRank.get(s.id))}</td>
+          <td class="tt-num">${s.gateList.length} ${rankChip(gatesRank.get(s.id))}</td>
+        </tr>
+        <tr class="tt-detail-row top-detail-row" data-sid-detail="${s.id}" style="display:none;">
+          <td colspan="5">
+            <div class="detail-grid">
+              <div class="detail-col">
+                <div class="detail-col-title">Gate ที่ผ่าน (${shipGates.length}) — เวลาแต่ละจุด</div>
+                ${gateChips}
+              </div>
+              <div class="detail-col">
+                <div class="detail-col-title">สินค้าในเที่ยวนี้ (${shipLines.length} รายการ)</div>
+                ${matRowsHtml}
+              </div>
+            </div>
+          </td>
+        </tr>`;
+      }).join('')}
       </tbody></table>`;
   } else {
     emptyState('timeCompareTable', 'ไม่มีข้อมูลเวลาที่ใช้คำนวณได้ตามตัวกรองนี้');
@@ -1064,6 +1248,150 @@ function render(model){
     {label:'Center Process − Shipment Start', value: avgLt3||0, valueLabel: avgLt3!==null?fmtMin(avgLt3):'-', color:'var(--navy-400,#6b8cbf)'},
   ].filter(it => it.value > 0 || it.valueLabel !== '-');
   renderBars('chLostTimeStage', stageItems, {labelWidth:260, unit:'นาที'});
+
+  // ---- Process funnel: how many shipments have data recorded at each stage ----
+  const funnelStages = [
+    {label: 'Shipment ทั้งหมด', value: totalShipments},
+    {label: 'ชั่งน้ำหนักเริ่มต้น (Weight Start)', value: shipmentList.filter(s=>s.hasWStart).length},
+    {label: 'เริ่มขนส่ง (Shipment Time)', value: shipmentList.filter(s=>s.hasShipTime).length},
+    {label: 'เข้า Center (Center Time)', value: shipmentList.filter(s=>s.hasCenterTime).length},
+    {label: 'ชั่งน้ำหนักสำเร็จ (Weight Success)', value: shipmentList.filter(s=>s.hasWSuccess).length},
+    {label: 'ผ่าน Gate ออก (Gate Check out)', value: shipmentList.filter(s=>s.lastOut !== null).length},
+  ];
+  renderFunnel('chProcessFunnel', funnelStages);
+
+  // ---- Multi-destination delivery: how many distinct Ship-To names appear
+  // within the SAME shipment (i.e. one truck delivering to multiple stops) ----
+  const shipToByShipment = new Map(); // shipment id -> Set of distinct (cleaned) Ship To names
+  lines.forEach(l=>{
+    if(!l.shipTo) return;
+    const name = cleanCustomerName(l.shipTo) || l.shipTo;
+    if(!shipToByShipment.has(l.shipment)) shipToByShipment.set(l.shipment, new Set());
+    shipToByShipment.get(l.shipment).add(name);
+  });
+  const destInfo = shipmentList.map(s=>{
+    const destSet = shipToByShipment.get(s.id) || new Set();
+    return { id: s.id, weight: s.weight, destCount: destSet.size, dests: Array.from(destSet) };
+  });
+  const withDest = destInfo.filter(x=>x.destCount>0);
+  const multiDest = withDest.filter(x=>x.destCount>1);
+  const avgDest = withDest.length ? withDest.reduce((a,x)=>a+x.destCount,0)/withDest.length : 0;
+  const maxDest = withDest.length ? Math.max(...withDest.map(x=>x.destCount)) : 0;
+
+  document.getElementById('kpiMultiDest').innerHTML = `
+    <div class="kpi reveal"><div class="top-row"><div class="icon">📍</div></div><div class="label">เที่ยวที่ส่งหลายปลายทาง</div><div class="value"><span class="cnt" data-t="${multiDest.length}">0</span><small>เที่ยว</small></div><span class="delta info">${fmtPct(multiDest.length, withDest.length)} ของ ${withDest.length} เที่ยวที่มีข้อมูล Ship To</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">📊</div></div><div class="label">ปลายทางเฉลี่ยต่อเที่ยว</div><div class="value"><span class="cnt" data-t="${avgDest.toFixed(2)}" data-d="2">0</span><small>จุด</small></div><span class="delta info">คำนวณจากทุกเที่ยวที่มีข้อมูล Ship To</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">🏆</div></div><div class="label">มากที่สุดใน 1 เที่ยว</div><div class="value"><span class="cnt" data-t="${maxDest}">0</span><small>จุด</small></div><span class="delta info">จำนวนปลายทางสูงสุดที่พบ</span></div>
+  `;
+
+  const bucketLabel = n => n<=1 ? '1 ปลายทาง' : n===2 ? '2 ปลายทาง' : n===3 ? '3 ปลายทาง' : '4+ ปลายทาง';
+  const bucketOrder = ['1 ปลายทาง','2 ปลายทาง','3 ปลายทาง','4+ ปลายทาง'];
+  const bucketCount = new Map(bucketOrder.map(b=>[b,0]));
+  withDest.forEach(x=>{ const b = bucketLabel(x.destCount); bucketCount.set(b, bucketCount.get(b)+1); });
+  const distItems = bucketOrder.map((b,i)=>({
+    label:b, value: bucketCount.get(b),
+    valueLabel: `${bucketCount.get(b)} เที่ยว (${fmtPct(bucketCount.get(b), withDest.length)})`,
+    color: i===0 ? '#c8d3e0' : 'var(--orange-500)',
+  }));
+  renderBars('chMultiDest', distItems, {labelWidth:140});
+
+  if(multiDest.length){
+    const top10Dest = [...multiDest].sort((a,b)=>b.destCount-a.destCount).slice(0,10);
+    document.getElementById('multiDestTable').innerHTML = `
+      <table class="time-table"><thead><tr><th>#</th><th>Shipment</th><th>จำนวนปลายทาง</th><th>น้ำหนัก (กก.)</th><th>รายชื่อปลายทาง</th></tr></thead><tbody>
+      ${top10Dest.map((x,i)=>`<tr>
+        <td class="tt-rank">${i+1}</td>
+        <td class="tt-id">${x.id}</td>
+        <td class="tt-num">${x.destCount}</td>
+        <td class="tt-num">${x.weight.toLocaleString(undefined,{maximumFractionDigits:1})}</td>
+        <td style="font-size:12px; color:var(--grey-700); line-height:1.6;" title="${x.dests.join(', ').replace(/"/g,'&quot;')}">${x.dests.join(' · ')}</td>
+      </tr>`).join('')}
+      </tbody></table>`;
+  } else {
+    emptyState('multiDestTable', 'ไม่พบเที่ยวที่ส่งหลายปลายทางตามตัวกรองนี้');
+  }
+
+  // ---- Issue cross-tab: issue rate by Gate and by Vehicle Type ----
+  const issueByGate = new Map(); // gate -> {total, issue}
+  const issueByVehicle = new Map(); // vehicleCode -> {total, issue}
+  shipmentList.forEach(s=>{
+    const hasIssue = !!(s.issue && s.issue.trim());
+    s.gateList.forEach(g=>{
+      if(!issueByGate.has(g)) issueByGate.set(g, {total:0, issue:0});
+      const rec = issueByGate.get(g); rec.total += 1; if(hasIssue) rec.issue += 1;
+    });
+    const v = s.vehicleCode || 'อื่นๆ';
+    if(!issueByVehicle.has(v)) issueByVehicle.set(v, {total:0, issue:0});
+    const rec = issueByVehicle.get(v); rec.total += 1; if(hasIssue) rec.issue += 1;
+  });
+  const gateIssueItems = Array.from(issueByGate.entries())
+    .map(([g,r])=>({label:'Gate '+g, rate: r.total>0 ? r.issue/r.total*100 : 0, count:r.issue, total:r.total}))
+    .sort((a,b)=>b.rate-a.rate)
+    .map(x=>({label:x.label, value:x.rate, valueLabel:`${x.rate.toFixed(1)}% (${x.count}/${x.total})`, color:'var(--orange-500)'}));
+  renderBars('chIssueByGate', gateIssueItems, {labelWidth:110, unit:'%'});
+
+  const vehicleIssueItems = Array.from(issueByVehicle.entries())
+    .map(([v,r])=>({label:v, rate: r.total>0 ? r.issue/r.total*100 : 0, count:r.issue, total:r.total}))
+    .sort((a,b)=>b.rate-a.rate)
+    .map(x=>({label:x.label, value:x.rate, valueLabel:`${x.rate.toFixed(1)}% (${x.count}/${x.total})`, color:'var(--navy-700)'}));
+  renderBars('chIssueByVehicle', vehicleIssueItems, {labelWidth:110, unit:'%'});
+
+  // ---- Daily trend: shipment count and total weight per calendar day ----
+  const dailyMap = new Map(); // dateKey -> {count, weight}
+  shipmentList.forEach(s=>{
+    if(!s.dateKey) return;
+    if(!dailyMap.has(s.dateKey)) dailyMap.set(s.dateKey, {count:0, weight:0});
+    const d = dailyMap.get(s.dateKey);
+    d.count += 1; d.weight += s.weight;
+  });
+  const dailyKeys = Array.from(dailyMap.keys()).sort();
+  const dailyCountPoints = dailyKeys.map(k=>({x: dayLabel(k), y: dailyMap.get(k).count}));
+  const dailyWeightPoints = dailyKeys.map(k=>({x: dayLabel(k), y: dailyMap.get(k).weight/1000}));
+  renderLineChart('chDailyCount', dailyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว'});
+  renderLineChart('chDailyWeight', dailyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>v.toFixed(0)});
+
+  // ---- Customer Pareto (80/20) + one-time-customer stat ----
+  const custMap = new Map(); // ชื่อลูกค้าที่ตัดคำนำหน้าแล้ว -> {count, weight}
+  shipmentList.forEach(s=>{
+    const name = cleanCustomerName(s.soldTo) || '(ไม่ระบุลูกค้า)';
+    if(!custMap.has(name)) custMap.set(name, {count:0, weight:0});
+    const c = custMap.get(name);
+    c.count += 1; c.weight += s.weight;
+  });
+  const custArr = Array.from(custMap.entries()).map(([name,v])=>({name, count:v.count, weight:v.weight})).sort((a,b)=>b.weight-a.weight);
+  const totalCustWeight = custArr.reduce((a,c)=>a+c.weight,0);
+  let cumW = 0, paretoCutIdx = -1;
+  custArr.forEach((c,i)=>{
+    cumW += c.weight;
+    c.cumPct = totalCustWeight>0 ? cumW/totalCustWeight*100 : 0;
+    if(paretoCutIdx===-1 && c.cumPct >= 80) paretoCutIdx = i;
+  });
+  if(paretoCutIdx === -1) paretoCutIdx = custArr.length-1;
+  const oneTimeCustomers = custArr.filter(c=>c.count===1);
+  const oneTimeWeight = oneTimeCustomers.reduce((a,c)=>a+c.weight,0);
+
+  document.getElementById('kpiPareto').innerHTML = `
+    <div class="kpi reveal"><div class="top-row"><div class="icon">🎯</div></div><div class="label">ลูกค้าที่สร้าง 80% ของน้ำหนักรวม</div><div class="value"><span class="cnt" data-t="${paretoCutIdx+1}">0</span><small>ราย</small></div><span class="delta info">จากลูกค้าทั้งหมด ${custArr.length} ราย (${fmtPct(paretoCutIdx+1,custArr.length)})</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">🆕</div></div><div class="label">ลูกค้าที่มีเที่ยวเดียว (One-time)</div><div class="value"><span class="cnt" data-t="${oneTimeCustomers.length}">0</span><small>ราย</small></div><span class="delta info">${fmtPct(oneTimeCustomers.length,custArr.length)} ของลูกค้าทั้งหมด</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">⚖️</div></div><div class="label">น้ำหนักจากลูกค้าเที่ยวเดียว</div><div class="value"><span class="cnt" data-t="${(oneTimeWeight/1000).toFixed(1)}" data-d="1">0</span><small>ตัน</small></div><span class="delta info">คิดเป็น ${fmtPct(oneTimeWeight,totalCustWeight)} ของน้ำหนักรวม</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">👥</div></div><div class="label">จำนวนลูกค้าทั้งหมด</div><div class="value"><span class="cnt" data-t="${custArr.length}">0</span><small>ราย</small></div><span class="delta info">ตามตัวกรองปัจจุบัน</span></div>
+  `;
+
+  if(custArr.length){
+    const showRows = custArr.slice(0, 20);
+    document.getElementById('paretoTable').innerHTML = `
+      <table class="time-table"><thead><tr><th>#</th><th>ลูกค้า</th><th>จำนวนเที่ยว</th><th>น้ำหนัก (ตัน)</th><th>% สะสม</th></tr></thead><tbody>
+      ${showRows.map((c,i)=>`<tr class="${i<=paretoCutIdx?'pareto-hi':''}">
+        <td class="tt-rank">${i+1}</td>
+        <td class="tt-id">${c.name}</td>
+        <td class="tt-num">${c.count}</td>
+        <td class="tt-num">${(c.weight/1000).toLocaleString(undefined,{maximumFractionDigits:1})}</td>
+        <td class="tt-num">${c.cumPct.toFixed(1)}%<div class="pareto-cum-track"><i style="width:${c.cumPct.toFixed(1)}%"></i></div></td>
+      </tr>`).join('')}
+      </tbody></table>`;
+  } else {
+    emptyState('paretoTable', 'ไม่มีข้อมูลลูกค้าตามตัวกรองนี้');
+  }
 
   // ---- Insights (dynamic) ----
   const busiestHour = hourRows.slice().sort((a,b)=>b.c-a.c)[0];
@@ -1211,23 +1539,26 @@ async function loadData(isRefresh){
 
 document.getElementById('btnRefresh').addEventListener('click', ()=> loadData(true));
 
-// Click-to-expand for the Top 10 shipment table. Delegated on the tbody (set up
-// once) so it keeps working across every re-render triggered by filter changes,
-// since only the tbody's innerHTML is replaced, not the tbody element itself.
-(function setupTopTableExpand(){
-  const tbody = document.getElementById('topTableBody');
-  if(!tbody) return;
-  tbody.addEventListener('click', (e)=>{
-    const row = e.target.closest('tr.top-row');
-    if(!row || !tbody.contains(row)) return;
+// Click-to-expand for ranked tables (Top 10 by weight, Top 10 by total time).
+// Delegated on a persistent container (set up once) so it keeps working across
+// every re-render triggered by filter changes, since only the container's
+// innerHTML is replaced, not the container element itself.
+function setupRowExpand(containerId, rowClass, detailClass){
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  container.addEventListener('click', (e)=>{
+    const row = e.target.closest('tr.' + rowClass);
+    if(!row || !container.contains(row)) return;
     const sid = row.dataset.sid;
-    const detail = tbody.querySelector(`tr.top-detail-row[data-sid-detail="${CSS.escape(sid)}"]`);
+    const detail = container.querySelector(`tr.${detailClass}[data-sid-detail="${CSS.escape(sid)}"]`);
     if(!detail) return;
     const opening = detail.style.display === 'none';
     detail.style.display = opening ? 'table-row' : 'none';
     row.classList.toggle('is-open', opening);
   });
-})();
+}
+setupRowExpand('topTableBody', 'top-row', 'top-detail-row');
+setupRowExpand('timeCompareTable', 'tt-row', 'tt-detail-row');
 
 // Keep the sticky filter bar pinned exactly below the topbar (measured, not
 // guessed, so it holds up if the topbar's height ever changes) and give it a
