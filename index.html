@@ -186,6 +186,7 @@
   .detail-gate-row, .detail-mat-row{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 0; border-bottom:1px dashed var(--grey-100); font-size:12.5px;}
   .detail-gate-row:last-child, .detail-mat-row:last-child{border-bottom:none;}
   .detail-gate-name{color:var(--navy-800); font-weight:500;}
+  .gate-order{display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:var(--navy-100); color:var(--navy-800); font-size:10px; font-weight:700; margin-right:6px;}
   .detail-gate-time{color:var(--orange-600); font-weight:600; white-space:nowrap;}
   .detail-mat-name{color:var(--grey-800); font-weight:300; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .detail-mat-weight{color:var(--navy-800); font-weight:600; white-space:nowrap;}
@@ -345,7 +346,7 @@
     <div class="panel reveal"><h3>คู่สินค้าที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองกลุ่มร่วมกัน (Product Group)</div><div class="chart-box tall" id="chCooccur"></div></div>
     <div class="panel reveal"><h3>คู่ Material Desc ที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองรายการนี้ร่วมกัน — เรียงจากบ่อยที่สุด</div><div id="chMaterialCooccur"></div></div>
     <div class="panel reveal"><h3>Top 10 Shipment น้ำหนักสูงสุด</h3>
-      <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูรายละเอียด Gate ที่ผ่านและสินค้าในเที่ยวนั้น</div>
+      <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูรายละเอียด Gate ที่ผ่าน (เรียงตามเวลาเข้าจริง ก่อน-หลัง) และสินค้าในเที่ยวนั้น</div>
       <table><thead><tr><th>#</th><th>Shipment</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th></tr></thead><tbody id="topTableBody"></tbody></table>
     </div>
 
@@ -353,7 +354,7 @@
     <div class="kpi-grid reveal" id="kpiBottleneck"></div>
     <div class="panel reveal">
       <h3>Top 10 Shipment ที่ใช้เวลารวมนานที่สุด</h3>
-      <div class="sub">เวลารวม = เวลาตั้งแต่เข้า Gate แรกจนออก Gate สุดท้าย (นาที) — แสดงคู่กับจำนวนรายการสินค้า (SKU) และจำนวน Gate ที่ผ่านในเที่ยวนั้น เพื่อดูว่าเวลาที่มากขึ้นสอดคล้องกับ SKU/Gate ที่มากขึ้นหรือไม่</div>
+      <div class="sub">เวลารวม = เวลาตั้งแต่เข้า Gate แรกจนออก Gate สุดท้าย (นาที) — แสดงคู่กับจำนวนรายการสินค้า (SKU) และจำนวน Gate ที่ผ่านในเที่ยวนั้น เพื่อดูว่าเวลาที่มากขึ้นสอดคล้องกับ SKU/Gate ที่มากขึ้นหรือไม่ · คลิกที่แถวเพื่อดูลำดับ Gate ที่ผ่าน เรียงตามเวลาเข้าจริง ก่อน-หลัง</div>
       <div id="timeCompareTable"></div>
     </div>
     <div class="panel reveal">
@@ -753,6 +754,8 @@ function animateCount(el, target, decimals=0){
 
 function fmtMin(m){ if(m===null||m===undefined) return '-'; const h=Math.floor(m/60), mm=Math.round(m%60); return h>0 ? `${h}ชม.${mm}น.` : `${mm}น.`; }
 function fmtPct(part, total){ return total>0 ? (part/total*100).toFixed(1)+'%' : '0%'; }
+// แปลง "นาทีของวัน" (0-1439) กลับเป็นเวลานาฬิกา HH:MM สำหรับแสดงเวลาเข้า Gate จริง
+function fmtClock(m){ if(m===null||m===undefined) return null; const h=Math.floor(m/60)%24, mm=Math.round(m%60); return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; }
 
 // Pearson correlation coefficient between two equal-length numeric arrays.
 // Returns null when there isn't enough variance/data to compute a meaningful value.
@@ -919,7 +922,9 @@ function buildModel(csvText){
           let dur = outMin - inMin; if(dur < 0) dur += 1440;
           // เวลารอเข้า Gate ที่คำนวณมาจากระบบโดยตรง (ไม่ใช่ derive เอง)
           const waitMin = parseDuration(r[idx.ltGate]);
-          if(dur >= 0 && dur < 600) gateVisits.push({shipment:sid, gate, minutes:dur, waitMinutes: waitMin});
+          // เก็บเวลาเข้า Gate จริง (นาทีของวัน, 0-1439) ไว้ด้วย เพื่อใช้เรียงลำดับว่า
+          // เข้า Gate ไหนก่อน-หลัง ตามเวลาจริง แทนการยึดลำดับแถวในชีต
+          if(dur >= 0 && dur < 600) gateVisits.push({shipment:sid, gate, minutes:dur, waitMinutes: waitMin, checkIn: inMin});
         }
       }
     }
@@ -1132,12 +1137,22 @@ function render(model){
   lines.forEach(l=>{ if(!linesByShipment.has(l.shipment)) linesByShipment.set(l.shipment, []); linesByShipment.get(l.shipment).push(l); });
   const gatesByShipment = new Map();
   gateVisits.forEach(v=>{ if(!gatesByShipment.has(v.shipment)) gatesByShipment.set(v.shipment, []); gatesByShipment.get(v.shipment).push(v); });
+  // เรียง Gate ที่ผ่านของแต่ละ Shipment ตามเวลาเข้าจริง (checkIn) จากก่อนไปหลัง
+  // ไม่ใช่ยึดลำดับแถวในชีต -- ถ้าไม่มีเวลาเข้า (checkIn เป็น null) ให้ไปอยู่ท้ายสุด
+  gatesByShipment.forEach(arr=>{
+    arr.sort((a,b)=>{
+      if(a.checkIn === null && b.checkIn === null) return 0;
+      if(a.checkIn === null) return 1;
+      if(b.checkIn === null) return -1;
+      return a.checkIn - b.checkIn;
+    });
+  });
 
   document.getElementById('topTableBody').innerHTML = top10.map((r,i)=>{
     const shipLines = linesByShipment.get(r.id) || [];
-    const shipGates = gatesByShipment.get(r.id) || []; // keep original (chronological) order from the sheet
+    const shipGates = gatesByShipment.get(r.id) || []; // เรียงตามเวลาเข้าจริง (checkIn) จากก่อนไปหลังแล้ว
     const gateChips = shipGates.length
-      ? shipGates.map(g=>`<div class="detail-gate-row"><span class="detail-gate-name">Gate ${g.gate}</span><span class="detail-gate-time">${g.minutes!=null ? fmtMin(g.minutes) : 'ไม่มีข้อมูลเวลา'}</span></div>`).join('')
+      ? shipGates.map((g,gi)=>`<div class="detail-gate-row"><span class="detail-gate-name"><b class="gate-order">${gi+1}</b> Gate ${g.gate}${fmtClock(g.checkIn) ? ' · เข้า '+fmtClock(g.checkIn)+' น.' : ''}</span><span class="detail-gate-time">${g.minutes!=null ? fmtMin(g.minutes) : 'ไม่มีข้อมูลเวลา'}</span></div>`).join('')
       : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูล Gate</div>`;
     const matRowsHtml = shipLines.length
       ? shipLines.map(l=>`<div class="detail-mat-row"><span class="detail-mat-name" title="${(l.materialDesc||'').replace(/"/g,'&quot;')}">${l.materialDesc || '(ไม่ระบุ)'}</span><span class="detail-mat-weight">${l.weight.toLocaleString(undefined,{maximumFractionDigits:0})} กก.</span></div>`).join('')
@@ -1195,9 +1210,9 @@ function render(model){
       <table class="time-table"><thead><tr><th>#</th><th>Shipment</th><th>เวลารวม</th><th>SKU (จำนวนรายการ)</th><th>Gate ที่ผ่าน</th></tr></thead><tbody>
       ${top10Span.map((s,i)=>{
         const shipLines = linesByShipment.get(s.id) || [];
-        const shipGates = gatesByShipment.get(s.id) || [];
+        const shipGates = gatesByShipment.get(s.id) || []; // เรียงตามเวลาเข้าจริง (checkIn) จากก่อนไปหลังแล้ว
         const gateChips = shipGates.length
-          ? shipGates.map(g=>`<div class="detail-gate-row"><span class="detail-gate-name">Gate ${g.gate}</span><span class="detail-gate-time">${g.minutes!=null ? fmtMin(g.minutes) : 'ไม่มีข้อมูลเวลา'}${g.waitMinutes!=null ? ' · รอ '+fmtMin(g.waitMinutes) : ''}</span></div>`).join('')
+          ? shipGates.map((g,gi)=>`<div class="detail-gate-row"><span class="detail-gate-name"><b class="gate-order">${gi+1}</b> Gate ${g.gate}${fmtClock(g.checkIn) ? ' · เข้า '+fmtClock(g.checkIn)+' น.' : ''}</span><span class="detail-gate-time">${g.minutes!=null ? fmtMin(g.minutes) : 'ไม่มีข้อมูลเวลา'}${g.waitMinutes!=null ? ' · รอ '+fmtMin(g.waitMinutes) : ''}</span></div>`).join('')
           : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูล Gate</div>`;
         const matRowsHtml = shipLines.length
           ? shipLines.map(l=>`<div class="detail-mat-row"><span class="detail-mat-name" title="${(l.materialDesc||'').replace(/"/g,'&quot;')}">${l.materialDesc || '(ไม่ระบุ)'}</span><span class="detail-mat-weight">${l.weight.toLocaleString(undefined,{maximumFractionDigits:0})} กก.</span></div>`).join('')
