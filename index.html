@@ -194,6 +194,8 @@
   .timeline-total{font-size:12px; color:var(--navy-800); background:var(--navy-100); border-radius:8px; padding:8px 12px; margin-bottom:8px;}
   .timeline-total b{color:var(--navy-900);}
   .timeline-note{font-size:11px; color:var(--orange-600); background:var(--orange-100); border-radius:8px; padding:6px 10px; margin:-4px 0 8px; line-height:1.5;}
+  .prev-day-row{background:rgba(15,52,96,.05);}
+  .prev-day-tag{display:inline-block; padding:1px 7px; border-radius:100px; background:var(--navy-800); color:#fff; font-size:9.5px; font-weight:600; margin-left:5px; vertical-align:middle;}
   .stage-row{background:rgba(255,107,53,.04);}
   .stage-order{background:var(--orange-100); color:var(--orange-600);}
   .stage-time{color:var(--grey-600); font-weight:500;}
@@ -802,19 +804,24 @@ function fmtClock(m){ if(m===null||m===undefined) return null; const h=Math.floo
 // "รวมเวลาทั้งหมด" = จากจุดแรกสุดถึงจุดสุดท้ายสุดที่มีข้อมูล
 function buildTimelineHtml(sh, shipGates, gateAvgMap){
   // ถ้า Weight Start (นาฬิกา) > Shipment Time แปลว่า Weight Start เกิดขึ้นตั้งแต่ "เมื่อวาน"
-  // ข้ามเที่ยงคืนมา (ชีตเก็บแค่เวลา ไม่มีวันที่) การเรียงลำดับแบบเดียวกันในวันเดียวจะผิด จึงตัด
-  // จุดนี้ออกจากไทม์ไลน์ (ไม่ใช่ derive/wrap เอาเอง เพราะไม่รู้ว่าข้ามมากี่วัน)
+  // ข้ามเที่ยงคืนมา (ชีตเก็บแค่เวลา ไม่มีวันที่) -- แสดงจุดนี้ไว้เหมือนเดิม แต่บังคับให้อยู่
+  // อันดับแรกสุดของไทม์ไลน์เสมอ (แทนที่จะเรียงตามค่าตัวเลขนาฬิกาเฉยๆ ซึ่งจะทำให้จุดนี้ไปโผล่
+  // ท้ายสุดผิดที่) และติดป้าย "(เมื่อวาน)" ให้เห็นชัดว่าไม่ใช่วันเดียวกับจุดอื่น
   const wStartIsPrevDay = sh.wStartMin !== null && sh.wStartMin !== undefined &&
     sh.shipTimeMin !== null && sh.shipTimeMin !== undefined && sh.wStartMin > sh.shipTimeMin;
   const stagePoints = [
-    { kind:'stage', label:'ชั่งน้ำหนักเริ่มต้น (Weight Start)', time: wStartIsPrevDay ? null : sh.wStartMin },
+    { kind:'stage', label: wStartIsPrevDay ? 'ชั่งน้ำหนักเริ่มต้น (Weight Start) — เมื่อวาน' : 'ชั่งน้ำหนักเริ่มต้น (Weight Start)', time: sh.wStartMin, prevDay: wStartIsPrevDay },
     { kind:'stage', label:'เริ่ม Shipment (Shipment Time)', time: sh.shipTimeMin },
     { kind:'stage', label:'เข้า Center (Center Time)', time: sh.centerTimeMin },
     { kind:'stage', label:'ชั่งน้ำหนักสำเร็จ (Weight Success)', time: sh.wSuccessMin },
   ].filter(p => p.time !== null && p.time !== undefined);
   const gatePoints = shipGates.map(g => ({ kind:'gate', label:`Gate ${g.gate}`, time: g.checkIn, checkOut: g.checkOut, minutes: g.minutes }))
     .filter(p => p.time !== null && p.time !== undefined);
-  const all = [...stagePoints, ...gatePoints].sort((a,b)=>a.time-b.time);
+  // ใช้ "sort key" แยกจากเวลาที่แสดงจริง -- จุดที่มาจากเมื่อวานจะถูกลบ 1440 นาที (1 วัน) ออก
+  // จาก sort key เท่านั้น เพื่อบังคับให้เรียงอยู่ก่อนจุดอื่นๆ ของวันนี้เสมอ โดยค่า time ที่แสดงผล
+  // และใช้คำนวณช่องว่างยังเป็นเวลานาฬิกาจริงตามเดิม (ไม่กระทบความถูกต้องของนาฬิกาที่แสดง)
+  const sortKey = p => p.prevDay ? p.time - 1440 : p.time;
+  const all = [...stagePoints, ...gatePoints].sort((a,b)=>sortKey(a)-sortKey(b));
   if(!all.length) return { rowsHtml: `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูลเวลา</div>`, totalHtml: '' };
 
   const rowsHtml = all.map((p,i)=>{
@@ -824,7 +831,8 @@ function buildTimelineHtml(sh, shipGates, gateAvgMap){
       const avgNote = (gateAvg!==undefined && p.minutes!=null) ? ` <span class="gate-avg-note">(เฉลี่ยของ Gate นี้ ${fmtMin(gateAvg)})</span>` : '';
       row = `<div class="detail-gate-row"><span class="detail-gate-name"><b class="gate-order">${i+1}</b> ${p.label}${fmtClock(p.time) ? ' · เข้า '+fmtClock(p.time)+' น.' : ''}</span><span class="detail-gate-time">${p.minutes!=null ? fmtMin(p.minutes) : 'ไม่มีข้อมูลเวลา'}${avgNote}</span></div>`;
     } else {
-      row = `<div class="detail-gate-row stage-row"><span class="detail-gate-name"><b class="gate-order stage-order">${i+1}</b> ${p.label}</span><span class="detail-gate-time stage-time">${fmtClock(p.time)} น.</span></div>`;
+      const prevDayTag = p.prevDay ? ' <span class="prev-day-tag">เมื่อวาน</span>' : '';
+      row = `<div class="detail-gate-row stage-row${p.prevDay?' prev-day-row':''}"><span class="detail-gate-name"><b class="gate-order stage-order">${i+1}</b> ${p.label}${prevDayTag}</span><span class="detail-gate-time stage-time">${fmtClock(p.time)} น.</span></div>`;
     }
     const next = all[i+1];
     let gapHtml = '';
@@ -839,8 +847,8 @@ function buildTimelineHtml(sh, shipGates, gateAvgMap){
   const first = all[0], last = all[all.length-1];
   const lastEnd = (last.kind==='gate' && last.checkOut!==null && last.checkOut!==undefined) ? last.checkOut : last.time;
   let totalSpan = lastEnd - first.time; if(totalSpan < 0) totalSpan += 1440;
-  const prevDayNote = wStartIsPrevDay ? `<div class="timeline-note">⚠ ไม่รวม "ชั่งน้ำหนักเริ่มต้น" ในไทม์ไลน์นี้ — เวลาที่บันทึกไว้อยู่หลัง Shipment Time แปลว่าชั่งน้ำหนักไว้ตั้งแต่วันก่อนหน้า (ข้ามเที่ยงคืนมา)</div>` : '';
-  const totalHtml = `<div class="timeline-total">รวมเวลาทั้งหมด: <b>${fmtClock(first.time)} → ${fmtClock(lastEnd)} น.</b> = <b>${fmtMin(totalSpan)}</b></div>${prevDayNote}`;
+  const dayNote = first.prevDay ? ' (ข้ามวัน)' : '';
+  const totalHtml = `<div class="timeline-total">รวมเวลาทั้งหมด${dayNote}: <b>${fmtClock(first.time)}${first.prevDay?' เมื่อวาน':''} → ${fmtClock(lastEnd)} น.</b> = <b>${fmtMin(totalSpan)}</b></div>`;
   return { rowsHtml, totalHtml };
 }
 
