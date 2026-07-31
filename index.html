@@ -45,6 +45,34 @@
   .refresh-btn.spinning .refresh-icon{animation:spin360 .8s linear infinite;}
   @keyframes spin360{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 
+  .progress-modal-backdrop{position:fixed; inset:0; background:rgba(6,26,51,.55); backdrop-filter:blur(2px); z-index:200; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s ease;}
+  .progress-modal-backdrop.show{opacity:1;}
+  .progress-modal{background:#fff; border-radius:20px; box-shadow:var(--shadow-lg); padding:28px 30px; width:340px; max-width:90vw; transform:translateY(8px) scale(.97); transition:transform .2s ease;}
+  .progress-modal-backdrop.show .progress-modal{transform:translateY(0) scale(1);}
+  .progress-modal-title{font-weight:700; font-size:15.5px; color:var(--navy-900); display:flex; align-items:center; gap:8px; margin-bottom:4px;}
+  .progress-modal-title .spin-icon{display:inline-block; animation:spin360 .9s linear infinite;}
+  .progress-modal-status{font-size:12.5px; color:var(--grey-600); font-weight:300; margin-bottom:16px; display:block; min-height:16px;}
+  .progress-modal-bar-track{background:var(--grey-100); border-radius:100px; height:12px; overflow:hidden; position:relative;}
+  .progress-modal-bar-fill{height:100%; border-radius:100px; background:linear-gradient(90deg,var(--orange-500),var(--orange-600)); width:0%; transition:width .25s ease;}
+  .progress-modal-bar-fill.done{background:linear-gradient(90deg,#22c55e,#16a34a);}
+  .progress-modal-row{display:flex; justify-content:flex-end; margin-top:8px;}
+  .progress-modal-pct{font-size:13px; font-weight:700; color:var(--orange-600); font-variant-numeric:tabular-nums;}
+  .progress-modal-pct.done{color:#16a34a;}
+
+  .nav-menu-wrap{position:relative;}
+  .nav-menu-btn{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:#fff; padding:8px 15px; border-radius:100px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:background .15s, transform .1s; white-space:nowrap;}
+  .nav-menu-btn:hover{background:rgba(255,255,255,.2);}
+  .nav-menu-btn:active{transform:scale(.96);}
+  .nav-menu-btn.active{background:var(--orange-500);}
+  .nav-menu-icon{display:inline-block; font-size:14px; line-height:1;}
+  .nav-menu-panel{position:absolute; top:calc(100% + 10px); right:0; background:#fff; border-radius:16px; box-shadow:var(--shadow-lg); width:320px; max-width:88vw; max-height:min(560px,70vh); overflow-y:auto; z-index:100; padding:8px; border:1px solid var(--grey-100);}
+  .nav-menu-title{font-size:11px; font-weight:700; color:var(--grey-400); text-transform:uppercase; letter-spacing:.5px; padding:8px 12px 6px;}
+  .nav-menu-item{display:flex; align-items:baseline; gap:8px; width:100%; text-align:left; background:none; border:none; padding:9px 12px; border-radius:10px; font-family:inherit; font-size:13.5px; color:var(--navy-800); cursor:pointer; transition:background .12s; line-height:1.4;}
+  .nav-menu-item:hover{background:var(--grey-100);}
+  .nav-menu-item:active{background:var(--orange-100);}
+  .nav-menu-item .num{color:var(--orange-600); font-weight:700; font-size:11px; flex-shrink:0; min-width:18px;}
+  @media (max-width:640px){ .nav-menu-panel{position:fixed; top:auto; bottom:0; left:0; right:0; width:100%; max-width:100%; max-height:75vh; border-radius:20px 20px 0 0;} }
+
   .hero{max-width:1320px; margin:0 auto; padding:36px 28px 8px;}
   .hero h1{font-size:clamp(22px,3.2vw,36px); font-weight:700; margin:0 0 8px; color:var(--navy-900);}
   .hero h1 span{color:var(--orange-600);}
@@ -281,6 +309,15 @@
     <div class="topbar-tags" id="topTags">
       <span class="tag"><span class="live-dot"></span>กำลังซิงค์ข้อมูล...</span>
     </div>
+    <div class="nav-menu-wrap">
+      <button id="btnNavMenu" class="nav-menu-btn" title="ไปยังหัวข้อที่ต้องการดู">
+        <span class="nav-menu-icon">☰</span> เมนู
+      </button>
+      <div id="navMenuPanel" class="nav-menu-panel" style="display:none;">
+        <div class="nav-menu-title">ไปยังหัวข้อ</div>
+        <div id="navMenuList"></div>
+      </div>
+    </div>
     <button id="btnRefresh" class="refresh-btn" title="ดึงข้อมูลล่าสุดจาก Google Sheet">
       <span class="refresh-icon">⟳</span> รีเฟรชข้อมูล
     </button>
@@ -290,6 +327,15 @@
 <div id="loadingState">
   <div class="spinner"></div>
   <p>กำลังดึงข้อมูลสดจาก Google Sheet "Table of Shipment" และประมวลผล...</p>
+</div>
+
+<div id="progressModalBackdrop" class="progress-modal-backdrop" style="display:none;">
+  <div class="progress-modal">
+    <div class="progress-modal-title"><span class="spin-icon">⟳</span> กำลังรีเฟรชข้อมูล</div>
+    <span id="progressModalStatus" class="progress-modal-status">กำลังเชื่อมต่อ Google Sheet...</span>
+    <div class="progress-modal-bar-track"><div id="progressModalFill" class="progress-modal-bar-fill" style="width:0%;"></div></div>
+    <div class="progress-modal-row"><span id="progressModalPct" class="progress-modal-pct">0%</span></div>
+  </div>
 </div>
 
 <div id="errorState" style="display:none;">
@@ -326,8 +372,16 @@
     </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>แนวโน้มรายวัน (Daily Trend)</h2><p>จำนวนเที่ยวและน้ำหนักรวมในแต่ละวัน ตามช่วงเวลาที่เลือกในตัวกรอง</p></div></div>
-    <div class="panel reveal"><h3>จำนวน Shipment ต่อวัน</h3><div class="sub">นับจำนวน Shipment ต่อ 1 วัน ตามวันที่ (Shipment Date) เรียงตามลำดับเวลา</div><div class="chart-box" style="height:auto;" id="chDailyCount"></div></div>
-    <div class="panel reveal"><h3>น้ำหนักรวมต่อวัน (ตัน)</h3><div class="sub">รวมน้ำหนัก (Weight) ของทุก Shipment ในวันนั้นๆ หารด้วย 1,000 เพื่อแปลงเป็นตัน</div><div class="chart-box" style="height:auto;" id="chDailyWeight"></div></div>
+    <div class="panel reveal"><h3>จำนวน Shipment ต่อวัน</h3><div class="sub">นับจำนวน Shipment ต่อ 1 วัน ตามวันที่ (Shipment Date) เรียงตามลำดับเวลา — แสดงครบทุกวัน</div><div class="chart-box" style="height:auto;" id="chDailyCount"></div></div>
+    <div class="panel reveal"><h3>น้ำหนักรวมต่อวัน (ตัน)</h3><div class="sub">รวมน้ำหนัก (Weight) ของทุก Shipment ในวันนั้นๆ หารด้วย 1,000 เพื่อแปลงเป็นตัน — แสดงครบทุกวัน</div><div class="chart-box" style="height:auto;" id="chDailyWeight"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>แนวโน้มรายสัปดาห์ (Weekly Trend)</h2><p>จำนวนเที่ยวและน้ำหนักรวม แบ่งเป็นสัปดาห์ (จันทร์-อาทิตย์) เพื่อดูภาพรวมเมื่อมีข้อมูลหลายเดือน</p></div></div>
+    <div class="panel reveal"><h3>จำนวน Shipment ต่อสัปดาห์</h3><div class="sub">รวมจำนวน Shipment ของทุกวันในสัปดาห์เดียวกัน (เริ่มวันจันทร์) แสดงเป็นช่วงวันที่ของสัปดาห์นั้น</div><div class="chart-box" style="height:auto;" id="chWeeklyCount"></div></div>
+    <div class="panel reveal"><h3>น้ำหนักรวมต่อสัปดาห์ (ตัน)</h3><div class="sub">รวมน้ำหนักของทุก Shipment ในสัปดาห์เดียวกัน หารด้วย 1,000 เพื่อแปลงเป็นตัน</div><div class="chart-box" style="height:auto;" id="chWeeklyWeight"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>แนวโน้มรายเดือน (Monthly Trend)</h2><p>จำนวนเที่ยวและน้ำหนักรวม แบ่งเป็นรายเดือน — เห็นภาพรวมระยะยาวเมื่อมีข้อมูลสะสมหลายเดือน</p></div></div>
+    <div class="panel reveal"><h3>จำนวน Shipment ต่อเดือน</h3><div class="sub">รวมจำนวน Shipment ของทุก Shipment ในเดือนเดียวกัน (ตาม Shipment Date)</div><div class="chart-box" style="height:auto;" id="chMonthlyCount"></div></div>
+    <div class="panel reveal"><h3>น้ำหนักรวมต่อเดือน (ตัน)</h3><div class="sub">รวมน้ำหนักของทุก Shipment ในเดือนเดียวกัน หารด้วย 1,000 เพื่อแปลงเป็นตัน</div><div class="chart-box" style="height:auto;" id="chMonthlyWeight"></div></div>
 
     <div style="margin-top:24px;" class="reveal"><div class="alert-banner" id="alertBanner"></div></div>
 
@@ -779,21 +833,23 @@ function renderLineChart(containerId, points, opts={}){
   linePath.setAttribute('stroke-linejoin','round'); linePath.setAttribute('stroke-linecap','round');
   svg.appendChild(linePath);
 
+  // ป้ายแกน X (วันที่/สัปดาห์/เดือน) กับ "ค่ากำกับตัวเลข" ใช้ความถี่แยกกันได้ -- เผื่อกรณี
+  // อยากโชว์ป้ายแกน X ครบทุกจุด (เช่นแนวโน้มรายวัน opts.maxLabels สูงๆ) แต่ไม่อยากให้ตัวเลข
+  // ค่ากำกับ (ซึ่งกินพื้นที่แนวนอนมากกว่า โดยเฉพาะเลขทศนิยม/ลูกน้ำ) เบียดทับกันจนอ่านไม่ออก
   const labelEvery = Math.max(1, Math.ceil(n / (opts.maxLabels||12)));
-  // ค่ากำกับตัวเลขบนกราฟ (แสดงติดจุดเลย ไม่ต้องรอ hover) -- ปิดได้ด้วย opts.showValueLabels=false
-  // ถ้าจุดเยอะเกินไปจะเบียดกันอ่านไม่ออก เลยใช้ช่วงห่างเดียวกับป้ายแกน X (labelEvery)
   const showValueLabels = opts.showValueLabels !== false;
   const valueLabelFmt = opts.valueLabelFmt || (v => Math.round(v).toLocaleString());
+  const valueLabelEvery = Math.max(1, Math.ceil(n / (opts.maxValueLabels || opts.maxLabels || 12)));
   points.forEach((p,i)=>{
     const cx = xAt(i), cy = yAt(p.y);
     const dot = document.createElementNS(svgNS,'circle');
     dot.setAttribute('cx',cx.toFixed(1)); dot.setAttribute('cy',cy.toFixed(1)); dot.setAttribute('r', 3.5);
     dot.setAttribute('fill','#fff'); dot.setAttribute('stroke', color); dot.setAttribute('stroke-width',2);
     dot.style.cursor = 'pointer';
-    dot.addEventListener('mouseenter', e=>showTip(e, `<b>${p.x}</b><br>${opts.tooltipFmt ? opts.tooltipFmt(p.y) : p.y.toLocaleString()}`));
+    dot.addEventListener('mouseenter', e=>showTip(e, `<b>${p.tooltipLabel || p.x}</b><br>${opts.tooltipFmt ? opts.tooltipFmt(p.y) : p.y.toLocaleString()}`));
     dot.addEventListener('mousemove', moveTip); dot.addEventListener('mouseleave', hideTip);
     svg.appendChild(dot);
-    if(showValueLabels && (i % labelEvery === 0 || i === n-1)){
+    if(showValueLabels && (i % valueLabelEvery === 0 || i === n-1)){
       const valLbl = document.createElementNS(svgNS,'text');
       const valY = Math.max(cy - 10, padT + 8); // กันไม่ให้ทะลุขอบบนกราฟตอนค่าสูงสุด
       valLbl.setAttribute('x', cx); valLbl.setAttribute('y', valY); valLbl.setAttribute('text-anchor','middle');
@@ -937,6 +993,31 @@ function cleanCustomerName(name){
 }
 
 // ============================================================
+// REFRESH PROGRESS POPUP (หลอดพลัง % ตอนกดรีเฟรช)
+// ============================================================
+function showProgressModal(){
+  const bd = document.getElementById('progressModalBackdrop');
+  setProgressModal(0, 'กำลังเชื่อมต่อ Google Sheet...');
+  document.getElementById('progressModalFill').classList.remove('done');
+  document.getElementById('progressModalPct').classList.remove('done');
+  bd.style.display = 'flex';
+  requestAnimationFrame(()=> bd.classList.add('show'));
+}
+function setProgressModal(pct, statusText){
+  const clamped = Math.max(0, Math.min(100, pct));
+  document.getElementById('progressModalFill').style.width = clamped.toFixed(0) + '%';
+  document.getElementById('progressModalPct').textContent = clamped.toFixed(0) + '%';
+  if(statusText !== undefined) document.getElementById('progressModalStatus').textContent = statusText;
+}
+function hideProgressModal(delay){
+  const bd = document.getElementById('progressModalBackdrop');
+  setTimeout(()=>{
+    bd.classList.remove('show');
+    setTimeout(()=>{ bd.style.display = 'none'; }, 200); // รอ transition fade จบก่อนค่อยซ่อนจริง
+  }, delay || 0);
+}
+
+// ============================================================
 // FETCH + BUILD (full, unfiltered model)
 // ============================================================
 // Published-to-web CSV URL (File > Share > Publish to web > CSV). Unlike the
@@ -945,13 +1026,23 @@ function cleanCustomerName(name){
 // can fetch it directly from a real browser without hitting a CORS block.
 const SHEET_PUBLIC_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTcTDk6aPOT0ELJAd8QGE1P0BkRFtHdYrJSH6WwOF-FskG_xaL8LTL7X9bHBoxkEor52Z_jyOW3XiSx/pub?gid=0&single=true&output=csv';
 
-async function fetchSheetCSV(){
+async function fetchSheetCSV(onProgress){
+  const emit = (pct, text) => { if(typeof onProgress === 'function') onProgress(pct, text); };
   // Path 1: running inside the Cowork artifact — use the Drive MCP tool
   // (works even if the Sheet is private, since Cowork's own Drive connection is used).
+  // การเรียก MCP tool เป็น promise เดียวจบ ไม่มี event ความคืบหน้าให้เกาะจริงๆ เลยจำลอง
+  // เปอร์เซ็นต์ไต่ขึ้นไปเรื่อยๆ (ไม่เกิน 90% จนกว่าจะเสร็จจริง) ให้พอเห็นว่ากำลังทำงานอยู่
   if(window.cowork && typeof window.cowork.callMcpTool === 'function'){
-    const res = await window.cowork.callMcpTool('mcp__d34843dd-7fed-4911-be20-8675067ac018__download_file_content', {
-      fileId: SHEET_FILE_ID, exportMimeType: 'text/csv'
-    });
+    emit(8, 'กำลังเชื่อมต่อ Google Drive...');
+    let simPct = 8;
+    const ramp = setInterval(()=>{ simPct = Math.min(simPct + (90-simPct)*0.15, 90); emit(simPct, 'กำลังดึงข้อมูลจาก Google Sheet...'); }, 200);
+    let res;
+    try{
+      res = await window.cowork.callMcpTool('mcp__d34843dd-7fed-4911-be20-8675067ac018__download_file_content', {
+        fileId: SHEET_FILE_ID, exportMimeType: 'text/csv'
+      });
+    } finally { clearInterval(ramp); }
+    emit(95, 'ประมวลผลข้อมูล...');
     if(res.isError) throw new Error('เรียก Google Drive tool ไม่สำเร็จ: ' + JSON.stringify(res.content||res));
     const payload = res.structuredContent ?? JSON.parse(res.content[0].text);
     let raw = payload.content ?? payload.fileContent ?? payload.text;
@@ -972,9 +1063,34 @@ async function fetchSheetCSV(){
   // published-to-web CSV URL directly (requires the Sheet to stay published, and
   // requires the browser to actually be online).
   try{
+    emit(5, 'กำลังเชื่อมต่อ Google Sheet...');
     const res = await fetch(SHEET_PUBLIC_CSV_URL, {cache:'no-store'});
     if(!res.ok) throw new Error('HTTP ' + res.status);
-    const csvText = await res.text();
+    // ถ้า response มี Content-Length และ browser รองรับ ReadableStream ใช้ % ความคืบหน้าจริง
+    // จากจำนวนไบต์ที่โหลดแล้ว/ทั้งหมด — ถ้าไม่รู้ขนาดไฟล์ล่วงหน้า (chunked) ก็ไล่จำลองแทน
+    const totalBytes = parseInt(res.headers.get('content-length') || '0', 10);
+    if(res.body && typeof res.body.getReader === 'function' && totalBytes > 0){
+      const reader = res.body.getReader();
+      const chunks = []; let received = 0;
+      while(true){
+        const { done, value } = await reader.read();
+        if(done) break;
+        chunks.push(value); received += value.length;
+        emit(5 + (received/totalBytes)*90, `กำลังดาวน์โหลดข้อมูล... (${(received/1024).toFixed(0)} / ${(totalBytes/1024).toFixed(0)} KB)`);
+      }
+      emit(96, 'ประมวลผลข้อมูล...');
+      const all = new Uint8Array(received); let offset = 0;
+      chunks.forEach(c=>{ all.set(c, offset); offset += c.length; });
+      const csvText = new TextDecoder('utf-8').decode(all);
+      if(!csvText || !csvText.includes(',')) throw new Error('ได้รับข้อมูลว่างเปล่าหรือไม่ใช่ CSV');
+      return csvText;
+    }
+    // ไม่รู้ขนาดไฟล์ล่วงหน้า -- จำลองเปอร์เซ็นต์ไต่ขึ้นระหว่างรอ res.text() แทน
+    let simPct = 10;
+    const ramp = setInterval(()=>{ simPct = Math.min(simPct + (90-simPct)*0.15, 90); emit(simPct, 'กำลังดาวน์โหลดข้อมูล...'); }, 200);
+    let csvText;
+    try{ csvText = await res.text(); } finally { clearInterval(ramp); }
+    emit(96, 'ประมวลผลข้อมูล...');
     if(!csvText || !csvText.includes(',')) throw new Error('ได้รับข้อมูลว่างเปล่าหรือไม่ใช่ CSV');
     return csvText;
   }catch(e){
@@ -1132,7 +1248,7 @@ function render(model){
 
   if(!totalShipments){
     document.getElementById('kpiGrid').innerHTML = `<div class="empty-note" style="grid-column:1/-1;">ไม่มี Shipment ตรงกับตัวกรองที่เลือก</div>`;
-    ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chHourlyOut','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCooccur','chMaterialCooccur','chReturnCustomer','chReturnMaterial','chTopShipTo','chWeightHist','chDowTrend'].forEach(id=>emptyState(id));
+    ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chHourlyOut','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCooccur','chMaterialCooccur','chReturnCustomer','chReturnMaterial','chTopShipTo','chWeightHist','chDowTrend','chDailyCount','chDailyWeight','chWeeklyCount','chWeeklyWeight','chMonthlyCount','chMonthlyWeight'].forEach(id=>emptyState(id));
     document.getElementById('legJobType').innerHTML=''; document.getElementById('legStatus').innerHTML=''; document.getElementById('legVehicleShare').innerHTML='';
     document.getElementById('alertBanner').innerHTML = `<div class="lead">No Data</div><h3>ไม่มีข้อมูลตามตัวกรองที่เลือก</h3><p>ลองล้างตัวกรองหรือเลือกเดือน/ประเภทรถ/Gate อื่น</p>`;
     document.getElementById('topTableBody').innerHTML = '';
@@ -1688,10 +1804,63 @@ function render(model){
     d.count += 1; d.weight += s.weight;
   });
   const dailyKeys = Array.from(dailyMap.keys()).sort();
-  const dailyCountPoints = dailyKeys.map(k=>({x: dayLabel(k), y: dailyMap.get(k).count}));
-  const dailyWeightPoints = dailyKeys.map(k=>({x: dayLabel(k), y: dailyMap.get(k).weight/1000}));
-  renderLineChart('chDailyCount', dailyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString()});
-  renderLineChart('chDailyWeight', dailyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})});
+  // ป้ายแกน X แบบย่อ: โชว์ครบทุกวัน (ไม่เว้น) แต่ใส่แค่ตัวเลขวันที่ ส่วนชื่อเดือนใส่เฉพาะจุดแรกสุด
+  // กับวันที่ 1 ของทุกเดือน (จุดเปลี่ยนเดือน) กันป้ายทับกันตอนมีข้อมูลหลายสิบวัน — ส่วน tooltip
+  // ตอน hover ยังโชว์วันที่เต็มเสมอ (ไม่ย่อ) ผ่าน tooltipLabel
+  const compactDayLabel = (k,i) => {
+    const [,mo,d] = k.split('-'); const dayNum = parseInt(d,10);
+    return (i===0 || dayNum===1) ? dayLabel(k) : String(dayNum);
+  };
+  const dailyCountPoints = dailyKeys.map((k,i)=>({x: compactDayLabel(k,i), tooltipLabel: dayLabel(k), y: dailyMap.get(k).count}));
+  const dailyWeightPoints = dailyKeys.map((k,i)=>({x: compactDayLabel(k,i), tooltipLabel: dayLabel(k), y: dailyMap.get(k).weight/1000}));
+  renderLineChart('chDailyCount', dailyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxLabels: 999});
+  renderLineChart('chDailyWeight', dailyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxLabels: 999});
+
+  // ---- แนวโน้มรายสัปดาห์ (Weekly Trend) — จัดกลุ่มวันในสัปดาห์เดียวกัน (เริ่มจันทร์) เข้าด้วยกัน ----
+  // key ของแต่ละสัปดาห์ = วันจันทร์ของสัปดาห์นั้น (YYYY-MM-DD) เพื่อเรียงลำดับเวลาได้ตรงและไม่ชนกัน
+  const weekKeyOf = (dateKey) => {
+    const [y,mo,d] = dateKey.split('-').map(Number);
+    const dt = new Date(y, mo-1, d);
+    const dow = dt.getDay(); // 0=อาทิตย์..6=เสาร์
+    dt.setDate(dt.getDate() + (dow===0 ? -6 : 1-dow)); // ถอยไปวันจันทร์ของสัปดาห์นั้น
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  };
+  const weeklyMap = new Map(); // weekKey (วันจันทร์) -> {count, weight}
+  shipmentList.forEach(s=>{
+    if(!s.dateKey) return;
+    const wk = weekKeyOf(s.dateKey);
+    if(!weeklyMap.has(wk)) weeklyMap.set(wk, {count:0, weight:0});
+    const w = weeklyMap.get(wk); w.count += 1; w.weight += s.weight;
+  });
+  const weeklyKeys = Array.from(weeklyMap.keys()).sort();
+  const weekRangeLabel = (wk) => {
+    const [y,mo,d] = wk.split('-').map(Number);
+    const start = new Date(y, mo-1, d), end = new Date(y, mo-1, d+6);
+    const startLabel = `${start.getDate()} ${THAI_MONTHS_SHORT[start.getMonth()+1]}`;
+    const endLabel = end.getMonth()===start.getMonth() ? `${end.getDate()}` : `${end.getDate()} ${THAI_MONTHS_SHORT[end.getMonth()+1]}`;
+    return `${startLabel}-${endLabel}`;
+  };
+  const weeklyCountPoints = weeklyKeys.map(wk=>({x: weekRangeLabel(wk), y: weeklyMap.get(wk).count}));
+  const weeklyWeightPoints = weeklyKeys.map(wk=>({x: weekRangeLabel(wk), y: weeklyMap.get(wk).weight/1000}));
+  renderLineChart('chWeeklyCount', weeklyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxLabels: 999});
+  renderLineChart('chWeeklyWeight', weeklyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxLabels: 999});
+
+  // ---- แนวโน้มรายเดือน (Monthly Trend) — ใช้ s.month ("YYYY-MM") ที่ buildModel แยกไว้แล้ว ----
+  const monthlyMap = new Map(); // "YYYY-MM" -> {count, weight}
+  shipmentList.forEach(s=>{
+    if(!s.month) return;
+    if(!monthlyMap.has(s.month)) monthlyMap.set(s.month, {count:0, weight:0});
+    const m = monthlyMap.get(s.month); m.count += 1; m.weight += s.weight;
+  });
+  const monthlyKeys = Array.from(monthlyMap.keys()).sort();
+  const monthCompactLabel = (key) => {
+    const [y,mo] = key.split('-');
+    return `${THAI_MONTHS_SHORT[parseInt(mo,10)]} ${(parseInt(y,10)+543)%100}`;
+  };
+  const monthlyCountPoints = monthlyKeys.map(k=>({x: monthCompactLabel(k), tooltipLabel: monthLabel(k), y: monthlyMap.get(k).count}));
+  const monthlyWeightPoints = monthlyKeys.map(k=>({x: monthCompactLabel(k), tooltipLabel: monthLabel(k), y: monthlyMap.get(k).weight/1000}));
+  renderLineChart('chMonthlyCount', monthlyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxLabels: 999});
+  renderLineChart('chMonthlyWeight', monthlyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxLabels: 999});
 
   // ---- Customer Pareto (80/20) + one-time-customer stat ----
   const custMap = new Map(); // ชื่อลูกค้าที่ตัดคำนำหน้าแล้ว -> {count, weight}
@@ -1937,9 +2106,11 @@ async function loadData(isRefresh){
   } : null;
 
   if(isRefresh && btn){ btn.disabled = true; btn.classList.add('spinning'); }
+  if(isRefresh) showProgressModal();
 
   try{
-    const csvText = await fetchSheetCSV();
+    const csvText = await fetchSheetCSV(isRefresh ? setProgressModal : undefined);
+    if(isRefresh) setProgressModal(98, 'สร้างแดชบอร์ด...');
     FULL_MODEL = buildModel(csvText);
     if(!FULL_MODEL.shipmentList.length) throw new Error('ประมวลผลข้อมูลแล้วไม่พบ Shipment ใดๆ — โครงสร้างคอลัมน์อาจเปลี่ยนไป');
 
@@ -1974,9 +2145,16 @@ async function loadData(isRefresh){
     document.getElementById('loadingState').style.display = 'none';
     document.getElementById('errorState').style.display = 'none';
     document.getElementById('mainContent').style.display = 'block';
+    if(isRefresh){
+      document.getElementById('progressModalFill').classList.add('done');
+      document.getElementById('progressModalPct').classList.add('done');
+      setProgressModal(100, 'เสร็จสิ้น ✓');
+      hideProgressModal(500); // ค้างโชว์ 100% แป๊บนึงให้เห็นชัดๆ ก่อนปิด
+    }
   }catch(err){
     console.error(err);
     document.getElementById('loadingState').style.display = 'none';
+    if(isRefresh) hideProgressModal(0);
     if(!isRefresh){
       document.getElementById('errorMsg').innerHTML = 'รายละเอียด: <code>' + (err && err.message ? err.message.replace(/</g,'&lt;') : String(err)) + '</code>';
       document.getElementById('errorState').style.display = 'block';
@@ -2038,6 +2216,63 @@ setupRowExpand('custTableBody', 'top-row', 'top-detail-row');
     ).observe(sentinel);
   }
 })();
+
+// ============================================================
+// NAV MENU — เมนูกดแล้วเลื่อนไปยัง Part ที่ต้องการดู
+// ============================================================
+// สร้างรายการเมนูจากหัวข้อ <h2> ของทุก .section-head ในหน้า (เป็น static HTML อยู่แล้ว
+// ไม่ขึ้นกับข้อมูลที่โหลด เลยสร้างเมนูได้เลยตั้งแต่ต้น ไม่ต้องรอ loadData เสร็จ) — ถ้ามีการ
+// เพิ่ม/ลบ section ในอนาคต เมนูจะอัปเดตตามอัตโนมัติโดยไม่ต้องแก้โค้ดส่วนนี้เลย
+function buildNavMenu(){
+  const list = document.getElementById('navMenuList');
+  if(!list) return;
+  list.innerHTML = '';
+  let i = 0;
+  document.querySelectorAll('.wrap .section-head h2').forEach(h2=>{
+    const sectionHead = h2.closest('.section-head');
+    if(!sectionHead) return;
+    i++;
+    const id = 'sec-' + i;
+    sectionHead.id = id;
+    const title = h2.textContent.trim();
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'nav-menu-item';
+    btn.innerHTML = `<span class="num">${String(i).padStart(2,'0')}</span><span>${title}</span>`;
+    btn.addEventListener('click', ()=>{ scrollToSection(id); closeNavMenu(); });
+    list.appendChild(btn);
+  });
+}
+// เลื่อนไปยัง section โดยหักความสูงของ topbar + filter bar ที่ sticky ค้างอยู่ด้านบน
+// ออกไปด้วย ไม่งั้นหัวข้อจะโผล่ไปโดนบังอยู่ใต้แถบ sticky พอดี
+function scrollToSection(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const topbar = document.querySelector('.topbar');
+  const filterBar = document.getElementById('filterBar');
+  const offset = (topbar ? topbar.offsetHeight : 0) + (filterBar ? filterBar.offsetHeight : 0) + 16;
+  const y = el.getBoundingClientRect().top + window.pageYOffset - offset;
+  window.scrollTo({ top: Math.max(y, 0), behavior: 'smooth' });
+}
+function openNavMenu(){
+  document.getElementById('navMenuPanel').style.display = 'block';
+  document.getElementById('btnNavMenu').classList.add('active');
+}
+function closeNavMenu(){
+  document.getElementById('navMenuPanel').style.display = 'none';
+  document.getElementById('btnNavMenu').classList.remove('active');
+}
+document.getElementById('btnNavMenu').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  const panel = document.getElementById('navMenuPanel');
+  if(panel.style.display === 'block') closeNavMenu(); else openNavMenu();
+});
+document.addEventListener('click', (e)=>{
+  const wrap = document.querySelector('.nav-menu-wrap');
+  if(wrap && !wrap.contains(e.target)) closeNavMenu();
+});
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeNavMenu(); });
+buildNavMenu();
 
 // ============================================================
 // BOOT
