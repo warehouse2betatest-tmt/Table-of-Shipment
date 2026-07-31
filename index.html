@@ -415,6 +415,28 @@
       <div class="panel"><h3>อัตราการเกิดปัญหา แยกตามประเภทรถ</h3><div class="sub">% ของ Shipment แต่ละประเภทรถที่มีหมายเหตุปัญหา — วงเล็บคือ จำนวนที่มีปัญหา/จำนวนเที่ยวทั้งหมดของประเภทรถนั้น</div><div class="chart-box tall" id="chIssueByVehicle"></div></div>
     </div>
 
+    <div class="section-head reveal"><div><h2><span class="bar"></span>งาน Urgent เทียบกับงานปกติ</h2><p>เปรียบเทียบเวลารวม น้ำหนักเฉลี่ย และอัตราปัญหา เพื่อดูว่างานด่วนถูกจัดการเร็วกว่าจริงหรือไม่</p></div></div>
+    <div class="panel reveal"><h3>ตารางเปรียบเทียบ Urgent vs ปกติ</h3><div class="sub">"เวลารวมเฉลี่ยต่อเที่ยว" คำนวณจาก Gate แรกถึง Gate สุดท้าย (span) เฉพาะเที่ยวที่มีข้อมูล Gate ครบ ส่วน "อัตรามีปัญหา" คือ % ของเที่ยวที่มีหมายเหตุปัญหา (Issue) ต่อจำนวนเที่ยวในกลุ่มนั้น</div><div id="urgencyCompareTable"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>งานคืนสินค้า (Return)</h2><p>ภาพรวมเที่ยวที่มีประเภทงานเป็น Return ลูกค้าที่คืนบ่อยที่สุด และสินค้าที่ถูกคืนมากที่สุด</p></div></div>
+    <div class="kpi-grid reveal" id="kpiReturn"></div>
+    <div class="grid-2 reveal">
+      <div class="panel"><h3>ลูกค้าที่มีเที่ยว Return มากที่สุด (Top 10)</h3><div class="sub">นับจำนวนเที่ยว Return ต่อลูกค้า (Sold To Name ตัดคำนำหน้าแล้ว)</div><div class="chart-box tall" id="chReturnCustomer"></div></div>
+      <div class="panel"><h3>สินค้าที่ถูกคืนมากที่สุด ตามน้ำหนัก (Top 10)</h3><div class="sub">รวมน้ำหนักของสินค้าแต่ละชนิดในทุกเที่ยว Return</div><div class="chart-box tall" id="chReturnMaterial"></div></div>
+    </div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>ปลายทางที่ส่งบ่อยที่สุด (Top Ship-To)</h2><p>จัดอันดับปลายทาง (Ship To Name) จากทุก Shipment/รายการสินค้า ไม่ใช่แค่เที่ยวที่ส่งหลายปลายทาง</p></div></div>
+    <div class="panel reveal"><h3>Top 10 ปลายทางที่มีเที่ยวส่งมากที่สุด</h3><div class="sub">นับจำนวน Shipment ที่แตกต่างกันที่ส่งไปยังปลายทางนั้น (Ship To Name ตัดคำนำหน้าแล้ว)</div><div class="chart-box tall" id="chTopShipTo"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>การกระจายน้ำหนักต่อเที่ยว (Weight Distribution)</h2><p>สัดส่วนเที่ยวรถแยกตามช่วงน้ำหนักสินค้า เพื่อดูภาพรวมขนาดงานที่พบบ่อย</p></div></div>
+    <div class="panel reveal"><h3>จำนวนเที่ยวแยกตามช่วงน้ำหนัก</h3><div class="sub">แบ่งช่วงน้ำหนักต่อ 1 Shipment เป็น 6 ช่วง ตั้งแต่ต่ำกว่า 1 ตัน ถึง 20 ตันขึ้นไป</div><div class="chart-box" id="chWeightHist"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>ประเภทงาน x ประเภทรถ (Job Type x Vehicle Type)</h2><p>ดูว่าประเภทรถแบบไหนถูกใช้กับงาน Inbound / Outbound / Return มากที่สุด</p></div></div>
+    <div class="panel reveal"><h3>ตารางไขว้ ประเภทรถ x ประเภทงาน</h3><div class="sub">นับจำนวนเที่ยวของแต่ละประเภทรถ แยกตามประเภทงาน</div><div id="jtVehicleTable"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>แนวโน้มตามวันในสัปดาห์ (Day of Week)</h2><p>รวมจำนวนเที่ยวและน้ำหนักของทุกวันในสัปดาห์เดียวกัน (เช่น จันทร์ทั้งหมดรวมกัน) — ⚠️ ข้อมูลตัวอย่างมีเพียง ~11 วัน แต่ละวันในสัปดาห์จึงถูกนับแค่ 1-2 ครั้งเท่านั้น ผลลัพธ์เป็นเพียงแนวโน้มเบื้องต้น ยังสรุปแน่ชัดไม่ได้จนกว่าจะมีข้อมูลหลายสัปดาห์ขึ้นไป</p></div></div>
+    <div class="panel reveal"><h3>จำนวนเที่ยวรวม แยกตามวันในสัปดาห์</h3><div class="sub">รวมทุก Shipment ที่ตรงกับวันนั้นๆ ในสัปดาห์ (จันทร์-อาทิตย์) ตามช่วงเวลาที่เลือกในตัวกรอง</div><div class="chart-box" id="chDowTrend"></div></div>
+
     <div class="section-head reveal"><div><h2><span class="bar"></span>ข้อเสนอแนะเชิงปฏิบัติการ</h2><p>สรุปประเด็นสำคัญจากข้อมูล (ตามตัวกรองปัจจุบัน)</p></div></div>
     <div class="panel reveal"><div class="insight-list" id="insightList"></div></div>
 
@@ -1096,13 +1118,16 @@ function render(model){
 
   if(!totalShipments){
     document.getElementById('kpiGrid').innerHTML = `<div class="empty-note" style="grid-column:1/-1;">ไม่มี Shipment ตรงกับตัวกรองที่เลือก</div>`;
-    ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCustomer','chCooccur','chMaterialCooccur'].forEach(id=>emptyState(id));
+    ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCustomer','chCooccur','chMaterialCooccur','chReturnCustomer','chReturnMaterial','chTopShipTo','chWeightHist','chDowTrend'].forEach(id=>emptyState(id));
     document.getElementById('legJobType').innerHTML=''; document.getElementById('legStatus').innerHTML=''; document.getElementById('legVehicleShare').innerHTML='';
     document.getElementById('alertBanner').innerHTML = `<div class="lead">No Data</div><h3>ไม่มีข้อมูลตามตัวกรองที่เลือก</h3><p>ลองล้างตัวกรองหรือเลือกเดือน/ประเภทรถ/Gate อื่น</p>`;
     document.getElementById('longestBox').innerHTML = `<div class="hc-icon">—</div><div><div class="hc-title">Longest Shipment</div><div class="hc-main">ไม่มีข้อมูล</div></div>`;
     document.getElementById('topTableBody').innerHTML = '';
     document.getElementById('topSkuTableBody').innerHTML = '';
     document.getElementById('shipmentAlertTableBody').innerHTML = '';
+    document.getElementById('urgencyCompareTable').innerHTML = '';
+    document.getElementById('kpiReturn').innerHTML = '';
+    document.getElementById('jtVehicleTable').innerHTML = '';
     emptyState('gateSummaryTable');
     document.getElementById('insightList').innerHTML = `<div class="insight"><div class="num">•</div><div class="body"><b>ไม่มีข้อมูล</b><p>ลองปรับตัวกรองด้านบน</p></div></div>`;
     return;
@@ -1651,6 +1676,118 @@ function render(model){
   } else {
     emptyState('paretoTable', 'ไม่มีข้อมูลลูกค้าตามตัวกรองนี้');
   }
+
+  // ---- Urgent vs Normal job comparison ----
+  const normalShipments = shipmentList.filter(s=> !/urgent/i.test(s.status));
+  function urgencyGroupStats(arr){
+    const withSpanG = arr.filter(s=>s.span!==null);
+    const avgSpanG = withSpanG.length ? withSpanG.reduce((a,s)=>a+s.span,0)/withSpanG.length : null;
+    const avgWeightG = arr.length ? arr.reduce((a,s)=>a+s.weight,0)/arr.length : 0;
+    const withIssueG = arr.filter(s=>s.issue && s.issue.trim());
+    const issueRateG = arr.length ? (withIssueG.length/arr.length*100) : 0;
+    return { count: arr.length, avgSpan: avgSpanG, avgWeight: avgWeightG, issueRate: issueRateG };
+  }
+  const urgStats = urgencyGroupStats(urgentShipments);
+  const norStats = urgencyGroupStats(normalShipments);
+  const urgencyCmpNote = (urgStats.avgSpan!==null && norStats.avgSpan!==null)
+    ? `<div class="timeline-total" style="margin-top:10px;">สรุป: งาน Urgent ใช้เวลารวมเฉลี่ย <b>${urgStats.avgSpan < norStats.avgSpan ? 'เร็วกว่า' : urgStats.avgSpan > norStats.avgSpan ? 'ช้ากว่า' : 'ใกล้เคียงกับ'}</b> งานปกติ (${fmtMin(urgStats.avgSpan)} เทียบกับ ${fmtMin(norStats.avgSpan)})</div>`
+    : '';
+  document.getElementById('urgencyCompareTable').innerHTML = `
+    <table class="time-table"><thead><tr><th></th><th>จำนวนเที่ยว</th><th>เวลารวมเฉลี่ย/เที่ยว</th><th>น้ำหนักเฉลี่ย/เที่ยว</th><th>อัตรามีปัญหา</th></tr></thead><tbody>
+      <tr><td class="tt-id">🔥 งาน Urgent</td><td class="tt-num">${urgStats.count}</td><td class="tt-num">${urgStats.avgSpan!==null?fmtMin(urgStats.avgSpan):'-'}</td><td class="tt-num">${(urgStats.avgWeight/1000).toFixed(2)} ตัน</td><td class="tt-num">${urgStats.issueRate.toFixed(1)}%</td></tr>
+      <tr><td class="tt-id">งานปกติ</td><td class="tt-num">${norStats.count}</td><td class="tt-num">${norStats.avgSpan!==null?fmtMin(norStats.avgSpan):'-'}</td><td class="tt-num">${(norStats.avgWeight/1000).toFixed(2)} ตัน</td><td class="tt-num">${norStats.issueRate.toFixed(1)}%</td></tr>
+    </tbody></table>
+    ${urgencyCmpNote}
+  `;
+
+  // ---- Return (คืนสินค้า) job analysis ----
+  const returnShipments = shipmentList.filter(s=> /return/i.test(s.jobtype||''));
+  const returnWeight = returnShipments.reduce((a,s)=>a+s.weight,0);
+  const returnPct = totalShipments ? (returnShipments.length/totalShipments*100) : 0;
+  document.getElementById('kpiReturn').innerHTML = `
+    <div class="kpi reveal"><div class="top-row"><div class="icon">↩️</div></div><div class="label">เที่ยว Return</div><div class="value"><span class="cnt" data-t="${returnShipments.length}">0</span><small>เที่ยว</small></div><span class="delta info">${returnPct.toFixed(1)}% ของเที่ยวทั้งหมด</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">⚖️</div></div><div class="label">น้ำหนักสินค้าที่คืนรวม</div><div class="value"><span class="cnt" data-t="${(returnWeight/1000).toFixed(1)}" data-d="1">0</span><small>ตัน</small></div><span class="delta info">เฉลี่ย ${(returnWeight/1000/Math.max(returnShipments.length,1)).toFixed(2)} ตัน/เที่ยว</span></div>
+  `;
+  const returnIds = new Set(returnShipments.map(s=>s.id));
+  const returnCustMap = new Map();
+  returnShipments.forEach(s=>{
+    const name = cleanCustomerName(s.soldTo) || '(ไม่ระบุลูกค้า)';
+    if(!returnCustMap.has(name)) returnCustMap.set(name, {count:0, weight:0});
+    const c = returnCustMap.get(name); c.count += 1; c.weight += s.weight;
+  });
+  const returnCustRows = Array.from(returnCustMap.entries()).map(([name,v])=>({name, ...v})).sort((a,b)=>b.count-a.count).slice(0,10);
+  renderBars('chReturnCustomer', returnCustRows.map(r=>({label:r.name, value:r.count, valueLabel:`${r.count} เที่ยว (${(r.weight/1000).toFixed(1)} ตัน)`, color:`linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`})), {labelWidth:220});
+
+  const returnMatMap = new Map();
+  lines.forEach(l=>{
+    if(!returnIds.has(l.shipment) || !l.materialDesc) return;
+    if(!returnMatMap.has(l.materialDesc)) returnMatMap.set(l.materialDesc, {weight:0, ships:new Set()});
+    const m = returnMatMap.get(l.materialDesc); m.weight += l.weight; m.ships.add(l.shipment);
+  });
+  const returnMatRows = Array.from(returnMatMap.entries()).map(([label,v])=>({label, value:v.weight, ships:v.ships.size})).sort((a,b)=>b.value-a.value).slice(0,10);
+  renderBars('chReturnMaterial', returnMatRows.map(r=>({label:r.label, value:r.value, valueLabel:`${(r.value/1000).toFixed(2)} ตัน (${r.ships} เที่ยว)`, color:`linear-gradient(90deg, ${NAVY3}, ${NAVY})`})), {labelWidth:220, labelLines:2});
+
+  // ---- Top Ship-To destinations (ทุก Shipment/รายการสินค้า ไม่ใช่แค่ multi-destination) ----
+  const destMap2 = new Map(); // ชื่อปลายทาง (ตัดคำแล้ว) -> {ships:Set, weight}
+  lines.forEach(l=>{
+    if(!l.shipTo) return;
+    const name = cleanCustomerName(l.shipTo) || l.shipTo;
+    if(!destMap2.has(name)) destMap2.set(name, {ships:new Set(), weight:0});
+    const d = destMap2.get(name); d.ships.add(l.shipment); d.weight += l.weight;
+  });
+  const destRows2 = Array.from(destMap2.entries()).map(([name,v])=>({name, count:v.ships.size, weight:v.weight})).sort((a,b)=>b.count-a.count).slice(0,10);
+  renderBars('chTopShipTo', destRows2.map(r=>({label:r.name, value:r.count, valueLabel:`${r.count} เที่ยว (${(r.weight/1000).toFixed(1)} ตัน)`, color:`linear-gradient(90deg, ${NAVY3}, ${ORANGE})`})), {labelWidth:260});
+
+  // ---- Weight distribution histogram ----
+  const wBuckets = [
+    {label:'< 1 ตัน', min:0, max:1000},
+    {label:'1-2.5 ตัน', min:1000, max:2500},
+    {label:'2.5-5 ตัน', min:2500, max:5000},
+    {label:'5-10 ตัน', min:5000, max:10000},
+    {label:'10-20 ตัน', min:10000, max:20000},
+    {label:'20 ตันขึ้นไป', min:20000, max:Infinity},
+  ];
+  wBuckets.forEach(b=> b.count = 0);
+  shipmentList.forEach(s=>{ const b = wBuckets.find(bb=> s.weight>=bb.min && s.weight<bb.max); if(b) b.count++; });
+  renderBars('chWeightHist', wBuckets.map(b=>({label:b.label, value:b.count, valueLabel:`${b.count} เที่ยว (${fmtPct(b.count,totalShipments)})`, color:'var(--navy-700)'})), {labelWidth:110});
+
+  // ---- Job Type x Vehicle Type cross-tab ----
+  const jtVehTypes = Array.from(new Set(shipmentList.map(s=>s.jobtype).filter(Boolean))).sort();
+  const vehTypesXt = Array.from(new Set(shipmentList.map(s=>s.vehicleCode).filter(Boolean))).sort();
+  const jtVehMatrix = new Map(); // vehicleCode -> {jobtype: count}
+  shipmentList.forEach(s=>{
+    const v = s.vehicleCode, t = s.jobtype;
+    if(!v || !t) return;
+    if(!jtVehMatrix.has(v)) jtVehMatrix.set(v, {});
+    const row = jtVehMatrix.get(v); row[t] = (row[t]||0)+1;
+  });
+  if(vehTypesXt.length && jtVehTypes.length){
+    document.getElementById('jtVehicleTable').innerHTML = `
+      <table class="time-table"><thead><tr><th>ประเภทรถ</th>${jtVehTypes.map(t=>`<th>${jobTypeLabel(t)}</th>`).join('')}<th>รวม</th></tr></thead><tbody>
+      ${vehTypesXt.map(v=>{
+        const row = jtVehMatrix.get(v) || {};
+        const total = jtVehTypes.reduce((a,t)=>a+(row[t]||0),0);
+        return `<tr><td class="tt-id">${v}</td>${jtVehTypes.map(t=>`<td class="tt-num">${row[t]||0}</td>`).join('')}<td class="tt-num"><b>${total}</b></td></tr>`;
+      }).join('')}
+      </tbody></table>`;
+  } else {
+    emptyState('jtVehicleTable', 'ไม่มีข้อมูลตามตัวกรองนี้');
+  }
+
+  // ---- Day-of-week trend ----
+  const dowLabels = ['จ','อ','พ','พฤ','ศ','ส','อา']; // จันทร์ .. อาทิตย์
+  const dowMap = new Map(dowLabels.map(l=>[l,{count:0, weight:0}]));
+  shipmentList.forEach(s=>{
+    if(!s.dateKey) return;
+    const [dy,dmo,dd] = s.dateKey.split('-').map(Number);
+    const jsDow = new Date(dy, dmo-1, dd).getDay(); // 0=อาทิตย์..6=เสาร์
+    const label = dowLabels[(jsDow+6)%7]; // เรียงจันทร์เป็นตัวแรก
+    const rec = dowMap.get(label); rec.count += 1; rec.weight += s.weight;
+  });
+  renderBars('chDowTrend', dowLabels.map(l=>{
+    const r = dowMap.get(l);
+    return {label:l, value:r.count, valueLabel:`${r.count} เที่ยว (${(r.weight/1000).toFixed(1)} ตัน)`, color:`linear-gradient(90deg, ${NAVY3}, ${ORANGE})`};
+  }), {labelWidth:60});
 
   // ---- Insights (dynamic) ----
   const busiestHour = hourRows.slice().sort((a,b)=>b.c-a.c)[0];
