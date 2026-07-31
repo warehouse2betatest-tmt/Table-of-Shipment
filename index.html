@@ -59,6 +59,16 @@
   .progress-modal-pct{font-size:13px; font-weight:700; color:var(--orange-600); font-variant-numeric:tabular-nums;}
   .progress-modal-pct.done{color:#16a34a;}
 
+  /* Pop up ทั่วไปสำหรับแสดงรายละเอียด (ใช้กับ Heatmap คลิกดู Top 5) ต่างจาก progress-modal
+     ตรงที่เนื้อหาไม่คงที่ (ตาราง) เลยกว้างกว่าและ scroll ได้เมื่อเนื้อหายาว */
+  .detail-modal-backdrop{position:fixed; inset:0; background:rgba(6,26,51,.55); backdrop-filter:blur(2px); z-index:250; display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s ease; padding:24px;}
+  .detail-modal-backdrop.show{opacity:1;}
+  .detail-modal{background:#fff; border-radius:20px; box-shadow:var(--shadow-lg); padding:26px 28px; width:680px; max-width:100%; max-height:82vh; overflow-y:auto; position:relative; transform:translateY(8px) scale(.97); transition:transform .2s ease;}
+  .detail-modal-backdrop.show .detail-modal{transform:translateY(0) scale(1);}
+  .detail-modal-close{position:absolute; top:16px; right:16px; width:30px; height:30px; border-radius:50%; border:none; background:var(--grey-100); color:var(--grey-600); font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .15s;}
+  .detail-modal-close:hover{background:var(--orange-100); color:var(--orange-600);}
+  @media(max-width:640px){ .detail-modal{width:100%; padding:20px 18px;} }
+
   .nav-menu-wrap{position:relative;}
   .nav-menu-btn{display:inline-flex; align-items:center; gap:7px; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); color:#fff; padding:8px 15px; border-radius:100px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer; transition:background .15s, transform .1s; white-space:nowrap;}
   .nav-menu-btn:hover{background:rgba(255,255,255,.2);}
@@ -354,6 +364,13 @@
     <span id="progressModalStatus" class="progress-modal-status">กำลังเชื่อมต่อ Google Sheet...</span>
     <div class="progress-modal-bar-track"><div id="progressModalFill" class="progress-modal-bar-fill" style="width:0%;"></div></div>
     <div class="progress-modal-row"><span id="progressModalPct" class="progress-modal-pct">0%</span></div>
+  </div>
+</div>
+
+<div id="heatmapDetailBackdrop" class="detail-modal-backdrop" style="display:none;">
+  <div class="detail-modal">
+    <button id="heatmapDetailClose" class="detail-modal-close" aria-label="ปิด" title="ปิด">✕</button>
+    <div id="heatmapDetailBody"></div>
   </div>
 </div>
 
@@ -1607,6 +1624,10 @@ function render(model){
       return a.checkIn - b.checkIn;
     });
   });
+  // sync ให้ popup รายละเอียด Heatmap (ผูก event ครั้งเดียวตอน boot นอก render()) ใช้ข้อมูลชุดล่าสุดได้
+  HEAT_CTX.linesByShipment = linesByShipment;
+  HEAT_CTX.gatesByShipment = gatesByShipment;
+  HEAT_CTX.gateAvgMap = gateAvgMap;
 
   document.getElementById('topTableBody').innerHTML = top10.map((r,i)=>{
     const shipLines = linesByShipment.get(r.id) || [];
@@ -2088,7 +2109,7 @@ function render(model){
       });
       heatHtml += '</tr>';
     });
-    heatHtml += '</tbody></table></div><div class="legend-row" style="margin-top:12px;"><span class="chip"><i class="dot" style="background:var(--grey-50); border:1px solid var(--grey-100);"></i>ไม่มีรถ</span><span class="chip"><i class="dot" style="background:#e85d04;"></i>หนาแน่นสูงสุด (' + heatMax.toLocaleString() + ' เที่ยว)</span><span class="chip" style="color:var(--grey-400);">💡 คลิกที่ช่องเพื่อดู Top 5 Shipment</span></div><div id="heatmapDetail" style="margin-top:16px;"></div>';
+    heatHtml += '</tbody></table></div><div class="legend-row" style="margin-top:12px;"><span class="chip"><i class="dot" style="background:var(--grey-50); border:1px solid var(--grey-100);"></i>ไม่มีรถ</span><span class="chip"><i class="dot" style="background:#e85d04;"></i>หนาแน่นสูงสุด (' + heatMax.toLocaleString() + ' เที่ยว)</span><span class="chip" style="color:var(--grey-400);">💡 คลิกที่ช่องเพื่อดู Top 5 Shipment (เปิดเป็น Pop up)</span></div>';
     document.getElementById('dowHourHeatmap').innerHTML = heatHtml;
   } else {
     emptyState('dowHourHeatmap', 'ไม่มีข้อมูลเวลาเข้า Gate ตามตัวกรองนี้');
@@ -2404,6 +2425,9 @@ let FULL_MODEL = null;
 // เก็บ Shipment แยกตามช่อง Heatmap วัน x ชั่วโมง (คีย์ "dowIdx-hour") ไว้นอก render() เพราะ
 // ต้องให้ click handler ของตาราง (ผูกครั้งเดียวตอน boot) เข้าถึงข้อมูลชุดล่าสุดได้ทุกครั้งที่กรองใหม่
 let heatGridShipments = {};
+// เก็บ linesByShipment/gatesByShipment/gateAvgMap ชุดล่าสุดจาก render() ไว้ให้ popup รายละเอียด
+// Heatmap เรียก buildTimelineHtml() ได้เหมือนตาราง Top Shipment ทุกอย่าง (คลิกแถวดูไทม์ไลน์เต็ม)
+let HEAT_CTX = {};
 
 function jobTypeLabel(t){
   return /inbound/i.test(t) ? 'ขาเข้า (Inbound)' : /return/i.test(t) ? 'คืนสินค้า (Return)' : /outbound/i.test(t) ? 'ขาออก (Outbound)' : t;
@@ -2557,10 +2581,25 @@ setupRowExpand('topSkuTableBody', 'top-row', 'top-detail-row');
 setupRowExpand('shipmentAlertTableBody', 'top-row', 'top-detail-row');
 setupRowExpand('timeCompareTable', 'tt-row', 'tt-detail-row');
 setupRowExpand('custTableBody', 'top-row', 'top-detail-row');
+setupRowExpand('heatmapDetailBody', 'top-row', 'top-detail-row');
 
-// คลิกที่ช่อง Heatmap วัน x ชั่วโมง -> โชว์ Top 5 Shipment น้ำหนักสูงสุดของช่องนั้น (ผูก listener
-// ครั้งเดียวตอน boot บน container ที่คงอยู่ตลอด อ่านข้อมูลจาก heatGridShipments ซึ่งอัปเดตทุกครั้ง
-// ที่ render() ทำงานใหม่ ทำให้ยังกดดูได้ถูกต้องแม้เปลี่ยนตัวกรองไปแล้ว)
+// คลิกที่ช่อง Heatmap วัน x ชั่วโมง -> เปิด Pop up โชว์ Top 5 Shipment น้ำหนักสูงสุดของช่องนั้น
+// (ผูก listener ครั้งเดียวตอน boot บน container ที่คงอยู่ตลอด อ่านข้อมูลจาก heatGridShipments
+// ซึ่งอัปเดตทุกครั้งที่ render() ทำงานใหม่ ทำให้ยังกดดูได้ถูกต้องแม้เปลี่ยนตัวกรองไปแล้ว)
+function openHeatmapDetail(){
+  const bd = document.getElementById('heatmapDetailBackdrop');
+  bd.style.display = 'flex';
+  requestAnimationFrame(()=> bd.classList.add('show'));
+}
+function closeHeatmapDetail(){
+  const bd = document.getElementById('heatmapDetailBackdrop');
+  bd.classList.remove('show');
+  setTimeout(()=>{ bd.style.display = 'none'; }, 200);
+}
+document.getElementById('heatmapDetailClose').addEventListener('click', closeHeatmapDetail);
+document.getElementById('heatmapDetailBackdrop').addEventListener('click', (e)=>{ if(e.target.id === 'heatmapDetailBackdrop') closeHeatmapDetail(); });
+document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeHeatmapDetail(); });
+
 (function setupHeatmapClick(){
   const container = document.getElementById('dowHourHeatmap');
   if(!container) return;
@@ -2573,22 +2612,56 @@ setupRowExpand('custTableBody', 'top-row', 'top-detail-row');
     const ships = allShips.slice().sort((a,b)=>b.weight-a.weight).slice(0,5);
     container.querySelectorAll('td.heat-cell.selected').forEach(c=>c.classList.remove('selected'));
     cell.classList.add('selected');
-    const detail = document.getElementById('heatmapDetail');
-    if(!detail) return;
-    if(!ships.length){ detail.innerHTML = `<div class="empty-note">ไม่มีข้อมูล Shipment ในช่องนี้</div>`; return; }
-    detail.innerHTML = `
-      <div class="timeline-total">Top ${ships.length} จาก ${allShips.length.toLocaleString()} Shipment น้ำหนักสูงสุด — <b>${label}</b></div>
-      <table class="time-table" style="margin-top:8px;"><thead><tr><th>#</th><th>Shipment</th><th>ลูกค้า</th><th>ประเภทรถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th><th>Gate</th></tr></thead><tbody>
-      ${ships.map((s,i)=>`<tr>
-        <td class="tt-rank">${i+1}</td>
+    const body = document.getElementById('heatmapDetailBody');
+    if(!body) return;
+    if(!ships.length){
+      body.innerHTML = `<h3 style="margin-top:0;">${label}</h3><div class="empty-note">ไม่มีข้อมูล Shipment ในช่องนี้</div>`;
+      openHeatmapDetail();
+      return;
+    }
+    const linesByShipment = HEAT_CTX.linesByShipment || new Map();
+    const gatesByShipment = HEAT_CTX.gatesByShipment || new Map();
+    const gateAvgMap = HEAT_CTX.gateAvgMap || {};
+    const rowsHtml = ships.map((s,i)=>{
+      const shipLines = linesByShipment.get(s.id) || [];
+      const shipGates = gatesByShipment.get(s.id) || [];
+      const timeline = buildTimelineHtml(s, shipGates, gateAvgMap);
+      const matRowsHtml = shipLines.length
+        ? shipLines.map(l=>`<div class="detail-mat-row"><span class="detail-mat-name" title="${(l.materialDesc||'').replace(/"/g,'&quot;')}">${l.materialDesc || '(ไม่ระบุ)'}</span><span class="detail-mat-weight">${l.weight.toLocaleString(undefined,{maximumFractionDigits:0})} กก.</span></div>`).join('')
+        : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูลสินค้า</div>`;
+      const custName = cleanCustomerName(s.soldTo)||'ไม่ระบุ';
+      return `
+      <tr class="top-row" data-sid="${s.id}">
+        <td style="width:22px; color:var(--grey-400); font-weight:600; font-size:11.5px;"><span class="row-chevron">▸</span>${i+1}</td>
         <td class="tt-id">${s.id}</td>
-        <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(cleanCustomerName(s.soldTo)||'ไม่ระบุ').replace(/"/g,'&quot;')}">${cleanCustomerName(s.soldTo)||'ไม่ระบุ'}</td>
+        <td style="max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${custName.replace(/"/g,'&quot;')}">${custName}</td>
         <td class="tt-num">${s.vehicleCode||'-'}</td>
         <td class="tt-num">${fmtNum(s.weight,0)}</td>
         <td class="tt-num">${s.lineCount}</td>
         <td class="tt-num">${s.gateList.length}</td>
-      </tr>`).join('')}
-      </tbody></table>`;
+        <td class="tt-num">${s.span!==null?fmtMin(s.span):'-'}</td>
+      </tr>
+      <tr class="top-detail-row" data-sid-detail="${s.id}" style="display:none;">
+        <td colspan="8">
+          <div class="detail-grid">
+            <div class="detail-col">
+              <div class="detail-col-title">ไทม์ไลน์ทั้งหมด (${shipGates.length} Gate)</div>
+              ${timeline.totalHtml}
+              ${timeline.rowsHtml}
+            </div>
+            <div class="detail-col">
+              <div class="detail-col-title">สินค้าในเที่ยวนี้ (${shipLines.length} รายการ)</div>
+              ${matRowsHtml}
+            </div>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+    body.innerHTML = `
+      <h3 style="margin:0 0 4px;">${label}</h3>
+      <div class="timeline-total" style="margin-bottom:14px;">Top ${ships.length} จาก ${allShips.length.toLocaleString()} Shipment น้ำหนักสูงสุด — คลิกแถวเพื่อดูไทม์ไลน์เต็ม</div>
+      <table class="pair-table" style="width:100%;"><thead><tr><th></th><th>Shipment</th><th>ลูกค้า</th><th>ประเภทรถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th><th>Gate</th><th>เวลารวม</th></tr></thead><tbody>${rowsHtml}</tbody></table>`;
+    openHeatmapDetail();
   });
 })();
 
