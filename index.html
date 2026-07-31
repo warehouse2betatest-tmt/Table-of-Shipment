@@ -1448,7 +1448,7 @@ function render(model){
 
   if(top10Span.length){
     document.getElementById('timeCompareTable').innerHTML = `
-      <table class="time-table"><thead><tr><th>#</th><th>Shipment</th><th>ลูกค้า</th><th>เวลารวม</th><th>SKU (จำนวนรายการ)</th><th>Gate ที่ผ่าน</th></tr></thead><tbody>
+      <table class="time-table"><thead><tr><th>#</th><th>Shipment</th><th>ลูกค้า</th><th>รถ</th><th>เวลารวม</th><th>SKU (จำนวนรายการ)</th><th>Gate ที่ผ่าน</th></tr></thead><tbody>
       ${top10Span.map((s,i)=>{
         const shipLines = linesByShipment.get(s.id) || [];
         const shipGates = gatesByShipment.get(s.id) || []; // เรียงตามเวลาเข้าจริง (checkIn) จากก่อนไปหลังแล้ว
@@ -1461,12 +1461,13 @@ function render(model){
           <td class="tt-rank"><span class="row-chevron">▸</span>${i+1}</td>
           <td class="tt-id">${s.id}</td>
           ${custCell(s)}
+          <td class="tt-num">${s.vehicleCode}</td>
           <td class="tt-num">${fmtMin(s.span)}</td>
           <td class="tt-num">${s.lineCount} ${rankChip(linesRank.get(s.id))}</td>
           <td class="tt-num">${s.gateList.length} ${rankChip(gatesRank.get(s.id))}</td>
         </tr>
         <tr class="tt-detail-row top-detail-row" data-sid-detail="${s.id}" style="display:none;">
-          <td colspan="6">
+          <td colspan="7">
             <div class="detail-grid">
               <div class="detail-col">
                 <div class="detail-col-title">ไทม์ไลน์ทั้งหมด (${shipGates.length} Gate)</div>
