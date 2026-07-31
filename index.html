@@ -283,6 +283,11 @@
   .peak-note{display:inline-flex; align-items:center; gap:5px; margin-top:8px; padding:4px 11px; border-radius:100px; background:var(--orange-100); color:var(--orange-600); font-size:11px; font-weight:600;}
   .peak-note b{font-weight:700;}
 
+  td.heat-cell{transition:transform .12s ease, box-shadow .12s ease; position:relative;}
+  td.heat-cell:hover{transform:scale(1.08); box-shadow:0 0 0 2px var(--orange-500) inset; z-index:1;}
+  td.heat-cell.selected{box-shadow:0 0 0 2px var(--navy-900) inset;}
+  td.heat-cell.selected::after{content:"✓"; position:absolute; top:1px; right:2px; font-size:8px; opacity:.7;}
+
   /* กล่องสรุปต่ำสุด/เฉลี่ย/สูงสุด วางไว้ใน normal flow เหนือกราฟ (ไม่ใช้ position:absolute ทับ
      พื้นที่กราฟ) เพราะเดิมวางทับมุมขวาบนแล้วไปบังจุดข้อมูล/ค่ากำกับที่อยู่แถวบนสุดของกราฟพอดี
      ให้ชิดขวาด้วย margin-left:auto บนกล่อง width:max-content แทน */
@@ -2045,9 +2050,12 @@ function render(model){
   renderLineChart('chCycleMonthly', cycleMonthlyPoints, {color:'#7a3ac0', tooltipFmt: v=>fmtMin(v), valueLabelFmt: v=>Math.round(v).toLocaleString(), maxValueLabels:999});
 
   // ---- Heatmap วัน x ชั่วโมง (รวม Day-of-week + ชั่วโมงเข้า Gate แรก) ----
+  // เก็บ Shipment แต่ละใบไว้ต่อช่อง (heatGridShipments ตัวแปรนอก render()) ไว้ให้ click handler
+  // ที่ผูกครั้งเดียวตอน boot ดึงมาโชว์ Top 5 ได้ทุกครั้งที่กด โดยไม่ต้องคำนวณใหม่ตอนคลิก
   const dowLabelsHm = ['จ','อ','พ','พฤ','ศ','ส','อา'];
   const dowFullNameHm = {'จ':'วันจันทร์','อ':'วันอังคาร','พ':'วันพุธ','พฤ':'วันพฤหัสบดี','ศ':'วันศุกร์','ส':'วันเสาร์','อา':'วันอาทิตย์'};
   const heatGrid = {}; // "dowIdx-hour" -> count
+  heatGridShipments = {}; // reset ตัวแปรนอก render() ทุกครั้งที่กรองใหม่
   let heatMax = 0;
   shipmentList.forEach(s=>{
     if(!s.dateKey || s.firstIn===null) return;
@@ -2057,6 +2065,8 @@ function render(model){
     const hour = Math.floor(s.firstIn/60);
     const key = dowIdx+'-'+hour;
     heatGrid[key] = (heatGrid[key]||0)+1;
+    if(!heatGridShipments[key]) heatGridShipments[key] = [];
+    heatGridShipments[key].push(s);
     if(heatGrid[key] > heatMax) heatMax = heatGrid[key];
   });
   const activeHours = Array.from({length:24}, (_,h)=>h).filter(h=> dowLabelsHm.some((_,d)=> heatGrid[d+'-'+h]));
@@ -2072,11 +2082,13 @@ function render(model){
       heatHtml += `<tr><td class="tt-id">${String(h).padStart(2,'0')}:00</td>`;
       dowLabelsHm.forEach((d,di)=>{
         const v = heatGrid[di+'-'+h] || 0;
-        heatHtml += `<td style="text-align:center; font-weight:600; font-size:11.5px; ${cellColor(v)}" title="${dowFullNameHm[d]} ${String(h).padStart(2,'0')}:00 น. — ${v.toLocaleString()} เที่ยว">${v||''}</td>`;
+        const key = di+'-'+h;
+        const clickable = v>0 ? ` class="heat-cell" data-heat-key="${key}" data-heat-label="${dowFullNameHm[d]} ${String(h).padStart(2,'0')}:00 น."` : '';
+        heatHtml += `<td${clickable} style="text-align:center; font-weight:600; font-size:11.5px; cursor:${v>0?'pointer':'default'}; ${cellColor(v)}" title="${dowFullNameHm[d]} ${String(h).padStart(2,'0')}:00 น. — ${v.toLocaleString()} เที่ยว${v>0?' (คลิกดู Top 5)':''}">${v||''}</td>`;
       });
       heatHtml += '</tr>';
     });
-    heatHtml += '</tbody></table></div><div class="legend-row" style="margin-top:12px;"><span class="chip"><i class="dot" style="background:var(--grey-50); border:1px solid var(--grey-100);"></i>ไม่มีรถ</span><span class="chip"><i class="dot" style="background:#e85d04;"></i>หนาแน่นสูงสุด (' + heatMax.toLocaleString() + ' เที่ยว)</span></div>';
+    heatHtml += '</tbody></table></div><div class="legend-row" style="margin-top:12px;"><span class="chip"><i class="dot" style="background:var(--grey-50); border:1px solid var(--grey-100);"></i>ไม่มีรถ</span><span class="chip"><i class="dot" style="background:#e85d04;"></i>หนาแน่นสูงสุด (' + heatMax.toLocaleString() + ' เที่ยว)</span><span class="chip" style="color:var(--grey-400);">💡 คลิกที่ช่องเพื่อดู Top 5 Shipment</span></div><div id="heatmapDetail" style="margin-top:16px;"></div>';
     document.getElementById('dowHourHeatmap').innerHTML = heatHtml;
   } else {
     emptyState('dowHourHeatmap', 'ไม่มีข้อมูลเวลาเข้า Gate ตามตัวกรองนี้');
@@ -2389,6 +2401,9 @@ function render(model){
 // FILTER UI
 // ============================================================
 let FULL_MODEL = null;
+// เก็บ Shipment แยกตามช่อง Heatmap วัน x ชั่วโมง (คีย์ "dowIdx-hour") ไว้นอก render() เพราะ
+// ต้องให้ click handler ของตาราง (ผูกครั้งเดียวตอน boot) เข้าถึงข้อมูลชุดล่าสุดได้ทุกครั้งที่กรองใหม่
+let heatGridShipments = {};
 
 function jobTypeLabel(t){
   return /inbound/i.test(t) ? 'ขาเข้า (Inbound)' : /return/i.test(t) ? 'คืนสินค้า (Return)' : /outbound/i.test(t) ? 'ขาออก (Outbound)' : t;
@@ -2542,6 +2557,40 @@ setupRowExpand('topSkuTableBody', 'top-row', 'top-detail-row');
 setupRowExpand('shipmentAlertTableBody', 'top-row', 'top-detail-row');
 setupRowExpand('timeCompareTable', 'tt-row', 'tt-detail-row');
 setupRowExpand('custTableBody', 'top-row', 'top-detail-row');
+
+// คลิกที่ช่อง Heatmap วัน x ชั่วโมง -> โชว์ Top 5 Shipment น้ำหนักสูงสุดของช่องนั้น (ผูก listener
+// ครั้งเดียวตอน boot บน container ที่คงอยู่ตลอด อ่านข้อมูลจาก heatGridShipments ซึ่งอัปเดตทุกครั้ง
+// ที่ render() ทำงานใหม่ ทำให้ยังกดดูได้ถูกต้องแม้เปลี่ยนตัวกรองไปแล้ว)
+(function setupHeatmapClick(){
+  const container = document.getElementById('dowHourHeatmap');
+  if(!container) return;
+  container.addEventListener('click', (e)=>{
+    const cell = e.target.closest('td.heat-cell');
+    if(!cell || !container.contains(cell)) return;
+    const key = cell.dataset.heatKey;
+    const label = cell.dataset.heatLabel;
+    const allShips = heatGridShipments[key] || [];
+    const ships = allShips.slice().sort((a,b)=>b.weight-a.weight).slice(0,5);
+    container.querySelectorAll('td.heat-cell.selected').forEach(c=>c.classList.remove('selected'));
+    cell.classList.add('selected');
+    const detail = document.getElementById('heatmapDetail');
+    if(!detail) return;
+    if(!ships.length){ detail.innerHTML = `<div class="empty-note">ไม่มีข้อมูล Shipment ในช่องนี้</div>`; return; }
+    detail.innerHTML = `
+      <div class="timeline-total">Top ${ships.length} จาก ${allShips.length.toLocaleString()} Shipment น้ำหนักสูงสุด — <b>${label}</b></div>
+      <table class="time-table" style="margin-top:8px;"><thead><tr><th>#</th><th>Shipment</th><th>ลูกค้า</th><th>ประเภทรถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th><th>Gate</th></tr></thead><tbody>
+      ${ships.map((s,i)=>`<tr>
+        <td class="tt-rank">${i+1}</td>
+        <td class="tt-id">${s.id}</td>
+        <td style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${(cleanCustomerName(s.soldTo)||'ไม่ระบุ').replace(/"/g,'&quot;')}">${cleanCustomerName(s.soldTo)||'ไม่ระบุ'}</td>
+        <td class="tt-num">${s.vehicleCode||'-'}</td>
+        <td class="tt-num">${fmtNum(s.weight,0)}</td>
+        <td class="tt-num">${s.lineCount}</td>
+        <td class="tt-num">${s.gateList.length}</td>
+      </tr>`).join('')}
+      </tbody></table>`;
+  });
+})();
 
 // Keep the sticky filter bar pinned exactly below the topbar (measured, not
 // guessed, so it holds up if the topbar's height ever changes) and give it a
