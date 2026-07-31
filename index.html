@@ -275,7 +275,7 @@
   .bars-col{display:flex; flex-direction:column; justify-content:flex-start; gap:10px;}
   .bar-row{display:flex; align-items:center; gap:10px; padding:2px 0;}
   .bar-row .b-label{width:220px; flex-shrink:0; font-size:11.5px; color:var(--grey-600); font-weight:400; text-align:right; white-space:normal; word-break:break-word; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;}
-  .bar-row .b-track{flex:1; height:15px; background:var(--grey-100); border-radius:8px; overflow:hidden;}
+  .bar-row .b-track{flex:1; min-width:36px; height:15px; background:var(--grey-100); border-radius:8px; overflow:hidden;}
   .bar-row .b-fill{height:100%; width:0; border-radius:8px; cursor:pointer; transition:width 1s cubic-bezier(.2,.8,.2,1), filter .2s ease; background:linear-gradient(90deg,var(--navy-700),var(--navy-500));}
   .bar-row .b-fill:hover{filter:brightness(1.12);}
   .bar-row .b-val{width:150px; flex-shrink:0; font-size:11.5px; font-weight:600; color:var(--navy-900); white-space:nowrap; text-align:right; overflow:hidden; text-overflow:ellipsis;}
@@ -283,14 +283,17 @@
   .peak-note{display:inline-flex; align-items:center; gap:5px; margin-top:8px; padding:4px 11px; border-radius:100px; background:var(--orange-100); color:var(--orange-600); font-size:11px; font-weight:600;}
   .peak-note b{font-weight:700;}
 
-  .line-stat-box{position:absolute; top:6px; right:6px; display:flex; gap:12px; background:rgba(255,255,255,.94); border:1px solid var(--grey-100); border-radius:10px; padding:7px 12px; box-shadow:var(--shadow-sm); backdrop-filter:blur(3px); z-index:2;}
+  /* กล่องสรุปต่ำสุด/เฉลี่ย/สูงสุด วางไว้ใน normal flow เหนือกราฟ (ไม่ใช้ position:absolute ทับ
+     พื้นที่กราฟ) เพราะเดิมวางทับมุมขวาบนแล้วไปบังจุดข้อมูล/ค่ากำกับที่อยู่แถวบนสุดของกราฟพอดี
+     ให้ชิดขวาด้วย margin-left:auto บนกล่อง width:max-content แทน */
+  .line-stat-box{display:flex; gap:12px; background:var(--grey-50); border:1px solid var(--grey-100); border-radius:10px; padding:7px 12px; margin:0 0 12px auto; width:max-content;}
   .line-stat-box .ls-item{display:flex; flex-direction:column; align-items:center; gap:1px; min-width:44px;}
   .line-stat-box .ls-label{color:var(--grey-400); font-size:9px; font-weight:500; text-transform:uppercase; letter-spacing:.3px;}
   .line-stat-box .ls-val{font-weight:700; font-size:12px; color:var(--navy-900); font-variant-numeric:tabular-nums;}
   .line-stat-box .ls-val.hi{color:var(--orange-600);}
   .line-stat-box .ls-val.lo{color:var(--navy-700);}
   .line-stat-box .ls-sep{width:1px; background:var(--grey-100); align-self:stretch;}
-  @media(max-width:640px){ .line-stat-box{position:static; margin:0 0 10px auto; width:max-content;} }
+  @media(max-width:560px){ .line-stat-box{gap:8px; padding:6px 10px;} .line-stat-box .ls-item{min-width:36px;} }
 
   .empty-note{color:var(--grey-400); font-size:12.5px; font-weight:300; text-align:center; padding:40px 10px;}
 
@@ -693,7 +696,11 @@ function renderBars(containerId, items, opts={}){
     const row = document.createElement('div'); row.className = 'bar-row';
     const fullLabel = it.fullLabel || it.label;
     const labelStyle = opts.labelWidth ? ` style="width:${opts.labelWidth}px; -webkit-line-clamp:${opts.labelLines||2};"` : '';
-    row.innerHTML = `<div class="b-label"${labelStyle} title="${fullLabel.replace(/"/g,'&quot;')}">${it.label}</div><div class="b-track"><div class="b-fill" style="background:${it.color}"></div></div><div class="b-val">${it.valueLabel!==undefined?it.valueLabel:it.value.toLocaleString()}</div>`;
+    // opts.valWidth: บาง panel แคบ (เช่น กราฟใน grid-3 คอลัมน์) ถ้า label(220px)+val(150px)
+    // เริ่มต้นบวกกันเกินความกว้างจริงของ panel จะไปบีบ .b-track (flex:1) จนเหลือ 0px
+    // มองไม่เห็นแท่งกราฟเลย (บั๊กที่เจอใน chIssue) — เลยเปิดให้ระบุความกว้าง .b-val แคบลงได้ต่อกราฟ
+    const valStyle = opts.valWidth ? ` style="width:${opts.valWidth}px;"` : '';
+    row.innerHTML = `<div class="b-label"${labelStyle} title="${fullLabel.replace(/"/g,'&quot;')}">${it.label}</div><div class="b-track"><div class="b-fill" style="background:${it.color}"></div></div><div class="b-val"${valStyle}>${it.valueLabel!==undefined?it.valueLabel:it.value.toLocaleString()}</div>`;
     const fill = row.querySelector('.b-fill');
     fill.style.width = '0'; fill.dataset.target = (it.value/max*100).toFixed(1)+'%';
     fill.addEventListener('mouseenter', e=>showTip(e, it.tooltip || `<b>${fullLabel}</b><br>${it.valueLabel!==undefined?it.valueLabel:it.value.toLocaleString()} ${opts.unit||''}`));
@@ -851,6 +858,9 @@ function renderLineChart(containerId, points, opts={}){
   const showValueLabels = opts.showValueLabels !== false;
   const valueLabelFmt = opts.valueLabelFmt || (v => Math.round(v).toLocaleString());
   const valueLabelEvery = Math.max(1, Math.ceil(n / (opts.maxValueLabels || opts.maxLabels || 12)));
+  // ยิ่งมีจุดถี่ (เช่นแนวโน้มรายวันที่โชว์ค่ากำกับครบทุกจุด) ยิ่งต้องลดขนาดตัวเลขลง กันตัวเลข
+  // ชนกันเอง เพราะระยะห่างระหว่างจุดต่อจุดแคบลงเรื่อยๆ ตามจำนวนวันที่เพิ่มขึ้น
+  const valueFontSize = n > 25 ? 8.5 : n > 15 ? 9.5 : 10;
   points.forEach((p,i)=>{
     const cx = xAt(i), cy = yAt(p.y);
     const dot = document.createElementNS(svgNS,'circle');
@@ -864,7 +874,7 @@ function renderLineChart(containerId, points, opts={}){
       const valLbl = document.createElementNS(svgNS,'text');
       const valY = Math.max(cy - 10, padT + 8); // กันไม่ให้ทะลุขอบบนกราฟตอนค่าสูงสุด
       valLbl.setAttribute('x', cx); valLbl.setAttribute('y', valY); valLbl.setAttribute('text-anchor','middle');
-      valLbl.setAttribute('font-size','10'); valLbl.setAttribute('font-weight','600'); valLbl.setAttribute('fill', color);
+      valLbl.setAttribute('font-size', valueFontSize); valLbl.setAttribute('font-weight','600'); valLbl.setAttribute('fill', color);
       valLbl.textContent = valueLabelFmt(p.y);
       svg.appendChild(valLbl);
     }
@@ -877,10 +887,11 @@ function renderLineChart(containerId, points, opts={}){
     }
   });
 
-  container.innerHTML = ''; container.appendChild(svg);
+  container.innerHTML = '';
 
-  // กล่องเล็กมุมขวาบน สรุปค่าต่ำสุด/เฉลี่ย/สูงสุดของกราฟเส้นนี้ ให้เห็นภาพรวมได้ทันที
-  // โดยไม่ต้องไล่เม้าส์ชี้ทีละจุด — ใช้ valueLabelFmt เดียวกับตัวเลขกำกับบนเส้น เพื่อให้หน่วย/ทศนิยมตรงกัน
+  // กล่องสรุปค่าต่ำสุด/เฉลี่ย/สูงสุดของกราฟเส้นนี้ ให้เห็นภาพรวมได้ทันทีโดยไม่ต้องไล่เม้าส์ชี้
+  // ทีละจุด — วางไว้ "เหนือ" กราฟใน normal flow (ไม่ใช่ทับตัวกราฟ) กันไม่ให้บังจุดข้อมูล/
+  // ค่ากำกับที่อยู่แถวบนสุด ใช้ valueLabelFmt เดียวกับตัวเลขกำกับบนเส้น เพื่อให้หน่วย/ทศนิยมตรงกัน
   if(opts.showStats !== false){
     const ys = points.map(p=>p.y);
     const min = Math.min(...ys), max = Math.max(...ys), avg = ys.reduce((a,b)=>a+b,0)/ys.length;
@@ -895,6 +906,8 @@ function renderLineChart(containerId, points, opts={}){
       <div class="ls-item"><span class="ls-label">สูงสุด</span><span class="ls-val hi">${fmt(max)}</span></div>`;
     container.appendChild(statBox);
   }
+
+  container.appendChild(svg);
 }
 
 function animateCount(el, target, decimals=0){
@@ -1333,11 +1346,14 @@ function render(model){
     ? `แยกตามประเภทปัญหา เฉพาะเที่ยวที่มีหมายเหตุ (ไม่รวม "ไม่มีปัญหา" กันบังสัดส่วนปัญหาจริง) — รวม <b>${totalWithIssue.toLocaleString()}</b> จาก ${totalShipments.toLocaleString()} เที่ยวมีปัญหา (${fmtPct(totalWithIssue,totalShipments)})`
     : 'ไม่พบเที่ยวที่มีหมายเหตุปัญหาตามตัวกรองนี้';
   if(issueEntries.length){
+    // panel นี้อยู่ใน grid-3 (คอลัมน์แคบ ~300-360px) ถ้าใช้ b-label/b-val ความกว้าง default
+    // (220px+150px) จะบวกกันเกินความกว้างจริงของ panel จนไปบีบแท่งกราฟ (.b-track) เหลือ 0px
+    // มองไม่เห็นเลย — ระบุ labelWidth/valWidth แคบลงเฉพาะกราฟนี้ (ข้อความปัญหาสั้นอยู่แล้ว)
     renderBars('chIssue', issueEntries.map(([label,value],i)=>({
       label, value, valueLabel:`${value.toLocaleString()} (${fmtPct(value,totalWithIssue)})`,
       color: issColors[i%issColors.length],
       tooltip:`<b>${label}</b><br>${value.toLocaleString()} เที่ยว (${fmtPct(value,totalWithIssue)} ของเที่ยวที่มีปัญหา · ${fmtPct(value,totalShipments)} ของทั้งหมด)`
-    })), {unit:'เที่ยว'});
+    })), {unit:'เที่ยว', labelWidth:100, labelLines:2, valWidth:88});
   } else {
     emptyState('chIssue', 'ไม่พบเที่ยวที่มีหมายเหตุปัญหาตามตัวกรองนี้ 🎉');
   }
@@ -1882,8 +1898,8 @@ function render(model){
   // maxLabels สูง = โชว์ป้ายแกน X ครบทุกวัน (ตามที่ขอ) แต่ maxValueLabels แยกไว้ต่ำกว่า
   // (คุมความถี่ของ "ตัวเลขค่ากำกับ" ที่กินพื้นที่แนวนอนมากกว่าป้ายวันที่แบบย่อ) กันตัวเลข
   // ทับกันเวลามีข้อมูลหลายสิบวัน โดยเฉพาะกราฟน้ำหนักที่ค่ามีทศนิยม+ลูกน้ำ (เช่น "3,202.4")
-  renderLineChart('chDailyCount', dailyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxLabels: 999, maxValueLabels: 12});
-  renderLineChart('chDailyWeight', dailyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxLabels: 999, maxValueLabels: 10});
+  renderLineChart('chDailyCount', dailyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxLabels: 999, maxValueLabels: 999});
+  renderLineChart('chDailyWeight', dailyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxLabels: 999, maxValueLabels: 999});
 
   // ---- แนวโน้มรายสัปดาห์ (Weekly Trend) — จัดกลุ่มวันในสัปดาห์เดียวกัน (เริ่มจันทร์) เข้าด้วยกัน ----
   // key ของแต่ละสัปดาห์ = วันจันทร์ของสัปดาห์นั้น (YYYY-MM-DD) เพื่อเรียงลำดับเวลาได้ตรงและไม่ชนกัน
@@ -1913,8 +1929,8 @@ function render(model){
   const weeklyWeightPoints = weeklyKeys.map(wk=>({x: weekRangeLabel(wk), y: weeklyMap.get(wk).weight/1000}));
   // ไม่บังคับ maxLabels สูงแบบรายวัน เพราะป้ายสัปดาห์เป็นช่วงวันที่ (ยาวกว่าเลขวันเดี่ยวๆ มาก)
   // ถ้ามีข้อมูลสะสมหลายสิบสัปดาห์แล้วโชว์ครบทุกจุดจะทับกันอ่านไม่ออก ปล่อยให้ auto-thin (~12 ป้าย) แทน
-  renderLineChart('chWeeklyCount', weeklyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString()});
-  renderLineChart('chWeeklyWeight', weeklyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})});
+  renderLineChart('chWeeklyCount', weeklyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxValueLabels: 999});
+  renderLineChart('chWeeklyWeight', weeklyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxValueLabels: 999});
 
   // ---- แนวโน้มรายเดือน (Monthly Trend) — ใช้ s.month ("YYYY-MM") ที่ buildModel แยกไว้แล้ว ----
   const monthlyMap = new Map(); // "YYYY-MM" -> {count, weight}
@@ -1931,8 +1947,8 @@ function render(model){
   const monthlyCountPoints = monthlyKeys.map(k=>({x: monthCompactLabel(k), tooltipLabel: monthLabel(k), y: monthlyMap.get(k).count}));
   const monthlyWeightPoints = monthlyKeys.map(k=>({x: monthCompactLabel(k), tooltipLabel: monthLabel(k), y: monthlyMap.get(k).weight/1000}));
   // เดือนสั้นพอ ("ก.ค. 69") ทนได้มากกว่ารายสัปดาห์ แต่ก็ปล่อย auto-thin เหมือนกันเผื่อสะสมข้ามปี
-  renderLineChart('chMonthlyCount', monthlyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString()});
-  renderLineChart('chMonthlyWeight', monthlyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})});
+  renderLineChart('chMonthlyCount', monthlyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxValueLabels: 999});
+  renderLineChart('chMonthlyWeight', monthlyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxValueLabels: 999});
 
   // ---- Customer Pareto (80/20) + one-time-customer stat ----
   const custMap = new Map(); // ชื่อลูกค้าที่ตัดคำนำหน้าแล้ว -> {count, weight}
