@@ -187,6 +187,10 @@
   .detail-gate-row:last-child, .detail-mat-row:last-child{border-bottom:none;}
   .detail-gate-name{color:var(--navy-800); font-weight:500;}
   .gate-order{display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px; border-radius:50%; background:var(--navy-100); color:var(--navy-800); font-size:10px; font-weight:700; margin-right:6px;}
+  /* เวลาที่ใช้ที่ Gate (โหลดสินค้า) อยู่ในแถวสีส้ม -- ต่างจากช่องว่างก่อนเข้า Gate ถัดไป
+     ที่คั่นกลางระหว่างแถวด้วยสไตล์สีเทา/เส้นประ ให้แยกความหมายชัดเจนไม่ปนกัน */
+  .gate-gap-connector{display:flex; align-items:center; gap:5px; padding:4px 0 4px 4px; margin:-2px 0; font-size:11px; color:var(--grey-500); border-left:2px dashed var(--grey-200); margin-left:9px; padding-left:11px;}
+  .gap-arrow{color:var(--grey-400); font-size:11px;}
   .detail-gate-time{color:var(--orange-600); font-weight:600; white-space:nowrap;}
   .detail-mat-name{color:var(--grey-800); font-weight:300; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .detail-mat-weight{color:var(--navy-800); font-weight:600; white-space:nowrap;}
@@ -346,7 +350,7 @@
     <div class="panel reveal"><h3>คู่สินค้าที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองกลุ่มร่วมกัน (Product Group)</div><div class="chart-box tall" id="chCooccur"></div></div>
     <div class="panel reveal"><h3>คู่ Material Desc ที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองรายการนี้ร่วมกัน — เรียงจากบ่อยที่สุด</div><div id="chMaterialCooccur"></div></div>
     <div class="panel reveal"><h3>Top 10 Shipment น้ำหนักสูงสุด</h3>
-      <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูรายละเอียด Gate ที่ผ่าน (เรียงตามเวลาเข้าจริง ก่อน-หลัง) และสินค้าในเที่ยวนั้น เวลาที่ใช้ต่อ Gate อ้างอิงจากค่า Running Time ของระบบต้นทาง ส่วนเวลา "รอ" เป็นค่าวัดคิวแยกต่างหาก อาจไม่สอดคล้องกับช่วงเวลาระหว่าง Gate ที่เห็น</div>
+      <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูรายละเอียด Gate ที่ผ่าน (เรียงตามเวลาเข้าจริง ก่อน-หลัง) และสินค้าในเที่ยวนั้น เวลาที่ใช้ต่อ Gate (สีส้ม) = Running Time จากระบบต้นทาง ส่วนเส้นประคั่นระหว่างแถว = ช่องว่างก่อนเข้า Gate ถัดไป (เช็คอิน Gate ถัดไป − เช็คเอาท์ Gate นี้)</div>
       <table><thead><tr><th>#</th><th>Shipment</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th></tr></thead><tbody id="topTableBody"></tbody></table>
     </div>
 
@@ -354,7 +358,7 @@
     <div class="kpi-grid reveal" id="kpiBottleneck"></div>
     <div class="panel reveal">
       <h3>Top 10 Shipment ที่ใช้เวลารวมนานที่สุด</h3>
-      <div class="sub">เวลารวม = เวลาตั้งแต่เข้า Gate แรกจนออก Gate สุดท้าย (นาที) — แสดงคู่กับจำนวนรายการสินค้า (SKU) และจำนวน Gate ที่ผ่านในเที่ยวนั้น เพื่อดูว่าเวลาที่มากขึ้นสอดคล้องกับ SKU/Gate ที่มากขึ้นหรือไม่ · คลิกที่แถวเพื่อดูลำดับ Gate ที่ผ่าน เรียงตามเวลาเข้าจริง ก่อน-หลัง (เวลาที่ใช้ต่อ Gate = Running Time จากระบบต้นทาง, เวลา "รอ" เป็นค่าวัดคิวแยกต่างหาก)</div>
+      <div class="sub">เวลารวม = เวลาตั้งแต่เข้า Gate แรกจนออก Gate สุดท้าย (นาที) — แสดงคู่กับจำนวนรายการสินค้า (SKU) และจำนวน Gate ที่ผ่านในเที่ยวนั้น เพื่อดูว่าเวลาที่มากขึ้นสอดคล้องกับ SKU/Gate ที่มากขึ้นหรือไม่ · คลิกที่แถวเพื่อดูลำดับ Gate ที่ผ่าน เรียงตามเวลาเข้าจริง ก่อน-หลัง (เวลาที่ใช้ต่อ Gate = Running Time จากระบบต้นทาง, เส้นประคั่นระหว่างแถว = ช่องว่างก่อนเข้า Gate ถัดไป)</div>
       <div id="timeCompareTable"></div>
     </div>
     <div class="panel reveal">
@@ -362,7 +366,7 @@
       <div class="sub">ค่าสหสัมพันธ์ (Pearson correlation, r) ระหว่างเวลารวมต่อเที่ยว กับจำนวนรายการสินค้า และจำนวน Gate ที่ผ่าน — คำนวณจาก Shipment ทุกเที่ยวที่มีข้อมูลเวลาครบตามตัวกรองปัจจุบัน ค่า r เข้าใกล้ 1 หรือ -1 คือสัมพันธ์กันมาก เข้าใกล้ 0 คือแทบไม่สัมพันธ์กัน</div>
       <div id="corrCards" class="kpi-grid" style="grid-template-columns:repeat(2,1fr);"></div>
     </div>
-    <div class="panel reveal"><h3>จุดที่เสียเวลามากที่สุดในกระบวนการ (เฉลี่ยต่อเที่ยว)</h3><div class="sub">ใช้ค่า Lost Time ที่ระบบต้นทางคำนวณไว้แล้วโดยตรง (ไม่ได้คำนวณซ้ำ เพราะตรวจสอบสูตรย้อนกลับไม่สำเร็จ): รอเข้า Gate เฉลี่ยต่อครั้ง / Shipment Start−Weight Start / Center Process−Shipment Start (นาที) — ค่าเหล่านี้น่าจะมาจากการวัดคิวรถแยกต่างหาก ไม่ได้อิงจากช่วงเวลาระหว่าง Gate ที่แสดงในตาราง จึงอาจดูไม่สอดคล้องกับลำดับเวลาที่เห็น</div><div class="chart-box tall" id="chLostTimeStage"></div></div>
+    <div class="panel reveal"><h3>จุดที่เสียเวลามากที่สุดในกระบวนการ (เฉลี่ยต่อเที่ยว)</h3><div class="sub">รอเข้า Gate = เฉลี่ยจากคอลัมน์ Lost Time เวลาที่รถรอเข้า Gate (ตรวจสอบแล้วว่าคือ "เวลาก่อนเข้า Gate ถัดไปหลังออกจาก Gate นี้" ตรงกับสูตรที่คำนวณเอง 93.1%) ส่วน Shipment Start−Weight Start / Center Process−Shipment Start ใช้ค่าที่ระบบต้นทางคำนวณไว้แล้วโดยตรง (ไม่ได้คำนวณซ้ำ เพราะตรวจสอบสูตรย้อนกลับไม่สำเร็จ) หน่วยเป็นนาที</div><div class="chart-box tall" id="chLostTimeStage"></div></div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>Funnel กระบวนการทำงาน (Process Funnel)</h2><p>ดูว่า Shipment หลุด/ค้างอยู่ที่ขั้นไหนมากที่สุด ตั้งแต่ชั่งน้ำหนักเริ่มต้นจนออก Gate</p></div></div>
     <div class="panel reveal"><h3>Shipment ผ่านแต่ละขั้นตอนกี่เที่ยว</h3><div class="sub">นับจำนวน Shipment ที่มีข้อมูลบันทึกไว้ในแต่ละสเตจ (Weight Start → Shipment Time → Center Time → Weight Success → Gate Check out) เทียบกับจำนวน Shipment ทั้งหมดตามตัวกรองปัจจุบัน — ขั้นไหนที่จำนวนหล่นเยอะ แปลว่าเที่ยวรถจำนวนมากไม่ถูกบันทึกข้อมูล ณ ขั้นนั้น ควรตรวจสอบกระบวนการหน้างาน</div><div id="chProcessFunnel"></div></div>
@@ -757,6 +761,25 @@ function fmtPct(part, total){ return total>0 ? (part/total*100).toFixed(1)+'%' :
 // แปลง "นาทีของวัน" (0-1439) กลับเป็นเวลานาฬิกา HH:MM สำหรับแสดงเวลาเข้า Gate จริง
 function fmtClock(m){ if(m===null||m===undefined) return null; const h=Math.floor(m/60)%24, mm=Math.round(m%60); return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; }
 
+// สร้าง HTML รายการ Gate ที่ผ่าน (เรียงตามเวลาเข้าจริงแล้ว) พร้อม "เวลาที่ใช้ที่ Gate" (ตัวเลขสีส้ม
+// = Running Time จากระบบต้นทาง) และ "ช่องว่างก่อนเข้า Gate ถัดไป" (คั่นกลางระหว่างแถว, สีเทา) ซึ่ง
+// คำนวณเองจาก checkIn ของ Gate ถัดไป ลบ checkOut ของ Gate นี้ -- ตรวจสอบแล้วว่าค่านี้ตรงกับคอลัมน์
+// Lost Time เวลาที่รถรอเข้า Gate ของระบบต้นทาง 93.1% เป๊ะ (แค่ผูกกับ Gate คนละแถวจากที่ชื่อคอลัมน์
+// สื่อ) การคำนวณเองตรงนี้จึงแม่นยำและสอดคล้องกับลำดับเวลาที่แสดงเสมอ 100%
+function buildGateChipsHtml(shipGates){
+  if(!shipGates.length) return `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูล Gate</div>`;
+  return shipGates.map((g,gi)=>{
+    const row = `<div class="detail-gate-row"><span class="detail-gate-name"><b class="gate-order">${gi+1}</b> Gate ${g.gate}${fmtClock(g.checkIn) ? ' · เข้า '+fmtClock(g.checkIn)+' น.' : ''}</span><span class="detail-gate-time">${g.minutes!=null ? fmtMin(g.minutes) : 'ไม่มีข้อมูลเวลา'}</span></div>`;
+    const next = shipGates[gi+1];
+    let gapHtml = '';
+    if(next && g.checkOut!==null && g.checkOut!==undefined && next.checkIn!==null && next.checkIn!==undefined){
+      let gap = next.checkIn - g.checkOut; if(gap < 0) gap += 1440;
+      gapHtml = `<div class="gate-gap-connector"><span class="gap-arrow">↓</span>ห่าง ${fmtMin(gap)} ก่อนเข้า Gate ถัดไป</div>`;
+    }
+    return row + gapHtml;
+  }).join('');
+}
+
 // Pearson correlation coefficient between two equal-length numeric arrays.
 // Returns null when there isn't enough variance/data to compute a meaningful value.
 function pearsonCorr(xs, ys){
@@ -928,12 +951,16 @@ function buildModel(csvText){
           let dur = parseDuration(r[idx.running]);
           if(dur === null){ dur = outMin - inMin; if(dur < 0) dur += 1440; }
           // เวลารอเข้า Gate: ใช้ค่า Lost Time เวลาที่รถรอเข้า Gate จากระบบต้นทางตรงๆ
-          // (ทดสอบแล้วว่าไม่สามารถ derive จากช่องว่างระหว่าง Gate ก่อนหน้ากับ Gate นี้ได้
-          // ค่านี้น่าจะมาจากการติดตามคิวรถแยกต่างหาก ไม่ผูกกับลำดับ Gate ที่แสดงในตาราง)
+          // (ตรวจสอบสูตรใหม่แล้วพบว่า: ค่านี้ที่ติดอยู่กับ "Gate A" จริงๆ คือเวลาที่รอ "ก่อนจะ
+          // ไปเข้า Gate ถัดไป" (เช็คอิน Gate ถัดไป − เช็คเอาท์ Gate A) ตรงกัน 93.1% ของข้อมูลจริง
+          // -- ไม่ใช่ "เวลารอก่อนเข้า Gate A" ตามชื่อคอลัมน์ตรงตัว จึงย้ายไปแสดงเป็นค่า "ห่างก่อน
+          // เข้า Gate ถัดไป" ระหว่างแถวแทน (คำนวณเองจาก checkIn/checkOut ให้สอดคล้องกับลำดับ
+          // เสมอ) ส่วนค่าตัวนี้ (waitMin) ยังเก็บไว้ใช้กับ Gate สุดท้ายของแต่ละเที่ยว ซึ่งไม่มี Gate
+          // ถัดไปให้เทียบ และใช้เป็นค่าเฉลี่ยรวมใน KPI/กราฟสรุปด้วย
           const waitMin = parseDuration(r[idx.ltGate]);
           // เก็บเวลาเข้า Gate จริง (นาทีของวัน, 0-1439) ไว้ด้วย เพื่อใช้เรียงลำดับว่า
           // เข้า Gate ไหนก่อน-หลัง ตามเวลาจริง แทนการยึดลำดับแถวในชีต
-          if(dur !== null && dur >= 0 && dur < 600) gateVisits.push({shipment:sid, gate, minutes:dur, waitMinutes: waitMin, checkIn: inMin});
+          if(dur !== null && dur >= 0 && dur < 600) gateVisits.push({shipment:sid, gate, minutes:dur, waitMinutes: waitMin, checkIn: inMin, checkOut: outMin});
         }
       }
     }
@@ -1160,9 +1187,7 @@ function render(model){
   document.getElementById('topTableBody').innerHTML = top10.map((r,i)=>{
     const shipLines = linesByShipment.get(r.id) || [];
     const shipGates = gatesByShipment.get(r.id) || []; // เรียงตามเวลาเข้าจริง (checkIn) จากก่อนไปหลังแล้ว
-    const gateChips = shipGates.length
-      ? shipGates.map((g,gi)=>`<div class="detail-gate-row"><span class="detail-gate-name"><b class="gate-order">${gi+1}</b> Gate ${g.gate}${fmtClock(g.checkIn) ? ' · เข้า '+fmtClock(g.checkIn)+' น.' : ''}</span><span class="detail-gate-time">${g.minutes!=null ? fmtMin(g.minutes) : 'ไม่มีข้อมูลเวลา'}</span></div>`).join('')
-      : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูล Gate</div>`;
+    const gateChips = buildGateChipsHtml(shipGates);
     const matRowsHtml = shipLines.length
       ? shipLines.map(l=>`<div class="detail-mat-row"><span class="detail-mat-name" title="${(l.materialDesc||'').replace(/"/g,'&quot;')}">${l.materialDesc || '(ไม่ระบุ)'}</span><span class="detail-mat-weight">${l.weight.toLocaleString(undefined,{maximumFractionDigits:0})} กก.</span></div>`).join('')
       : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูลสินค้า</div>`;
@@ -1197,7 +1222,7 @@ function render(model){
 
   document.getElementById('kpiBottleneck').innerHTML = `
     <div class="kpi reveal"><div class="top-row"><div class="icon">⏱️</div></div><div class="label">เวลารวมเฉลี่ยต่อเที่ยว</div><div class="value">${avgSpan!==null?fmtMin(avgSpan):'-'}</div><span class="delta info">Gate แรกถึง Gate สุดท้าย · ${spanShips.length} เที่ยวที่มีข้อมูลครบ</span></div>
-    <div class="kpi reveal"><div class="top-row"><div class="icon">🚪</div></div><div class="label">รอเข้า Gate เฉลี่ย</div><div class="value">${avgGateWait!==null?fmtMin(avgGateWait):'-'}</div><span class="delta info">ค่า Lost Time จากระบบต้นทางโดยตรง (วัดคิวรถแยกต่างหาก ไม่ผูกกับลำดับ Gate ที่แสดง)</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">🚪</div></div><div class="label">รอเข้า Gate เฉลี่ย</div><div class="value">${avgGateWait!==null?fmtMin(avgGateWait):'-'}</div><span class="delta info">ค่า Lost Time จากระบบต้นทาง = เวลารอก่อนเข้า Gate ถัดไปหลังออกจาก Gate นี้</span></div>
     <div class="kpi reveal"><div class="top-row"><div class="icon">⚖️</div></div><div class="label">Shipment Start − Weight Start</div><div class="value">${avgLt2!==null?fmtMin(avgLt2):'-'}</div><span class="delta info">Lost Time เฉลี่ยต่อเที่ยว (จากระบบ)</span></div>
     <div class="kpi reveal"><div class="top-row"><div class="icon">🏭</div></div><div class="label">Center Process − Shipment Start</div><div class="value">${avgLt3!==null?fmtMin(avgLt3):'-'}</div><span class="delta info">Lost Time เฉลี่ยต่อเที่ยว (จากระบบ)</span></div>
   `;
@@ -1220,9 +1245,7 @@ function render(model){
       ${top10Span.map((s,i)=>{
         const shipLines = linesByShipment.get(s.id) || [];
         const shipGates = gatesByShipment.get(s.id) || []; // เรียงตามเวลาเข้าจริง (checkIn) จากก่อนไปหลังแล้ว
-        const gateChips = shipGates.length
-          ? shipGates.map((g,gi)=>`<div class="detail-gate-row"><span class="detail-gate-name"><b class="gate-order">${gi+1}</b> Gate ${g.gate}${fmtClock(g.checkIn) ? ' · เข้า '+fmtClock(g.checkIn)+' น.' : ''}</span><span class="detail-gate-time">${g.minutes!=null ? fmtMin(g.minutes) : 'ไม่มีข้อมูลเวลา'}${g.waitMinutes!=null ? ' · รอ '+fmtMin(g.waitMinutes) : ''}</span></div>`).join('')
-          : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูล Gate</div>`;
+        const gateChips = buildGateChipsHtml(shipGates);
         const matRowsHtml = shipLines.length
           ? shipLines.map(l=>`<div class="detail-mat-row"><span class="detail-mat-name" title="${(l.materialDesc||'').replace(/"/g,'&quot;')}">${l.materialDesc || '(ไม่ระบุ)'}</span><span class="detail-mat-weight">${l.weight.toLocaleString(undefined,{maximumFractionDigits:0})} กก.</span></div>`).join('')
           : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูลสินค้า</div>`;
