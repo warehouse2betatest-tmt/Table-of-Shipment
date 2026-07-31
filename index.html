@@ -367,11 +367,11 @@
     <div class="panel reveal"><h3>คู่ Material Desc ที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองรายการนี้ร่วมกัน — เรียงจากบ่อยที่สุด</div><div id="chMaterialCooccur"></div></div>
     <div class="panel reveal"><h3>Top 10 Shipment น้ำหนักสูงสุด</h3>
       <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูไทม์ไลน์เต็ม (ชั่งน้ำหนักเริ่มต้น → Shipment → Center → Gate ทุกจุด → ชั่งน้ำหนักสำเร็จ เรียงตามเวลาจริง) และสินค้าในเที่ยวนั้น เวลาที่ใช้ต่อ Gate (สีส้ม) = Running Time จากระบบต้นทาง เทียบกับค่าเฉลี่ยของ Gate นั้นทั้งระบบ ส่วนเส้นประคั่นระหว่างจุด = ช่องว่างก่อนเข้าจุดถัดไป</div>
-      <table><thead><tr><th>#</th><th>Shipment</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th></tr></thead><tbody id="topTableBody"></tbody></table>
+      <table><thead><tr><th>#</th><th>Shipment</th><th>ลูกค้า</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th></tr></thead><tbody id="topTableBody"></tbody></table>
     </div>
     <div class="panel reveal"><h3>Top 10 Shipment ที่มีสินค้าหลากหลายที่สุด (SKU)</h3>
       <div class="sub">เรียง Shipment ทั้งหมดตามจำนวนรายการสินค้า (SKU / Line Item) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูไทม์ไลน์เต็มและรายชื่อสินค้าทั้งหมดในเที่ยวนั้น</div>
-      <table><thead><tr><th>#</th><th>Shipment</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>SKU</th><th>น้ำหนัก (กก.)</th></tr></thead><tbody id="topSkuTableBody"></tbody></table>
+      <table><thead><tr><th>#</th><th>Shipment</th><th>ลูกค้า</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>SKU</th><th>น้ำหนัก (กก.)</th></tr></thead><tbody id="topSkuTableBody"></tbody></table>
     </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>เวลารวมทั้งเที่ยว &amp; จุดที่เสียเวลา (Bottleneck Analysis)</h2><p>Shipment ไหนใช้เวลารวมนานที่สุด และปัจจัยที่อาจเกี่ยวข้อง (จำนวนสินค้า/จำนวน Gate ที่ผ่าน) สัมพันธ์กันจริงหรือไม่</p></div></div>
@@ -398,7 +398,7 @@
       <h3>Shipment ที่เวลาผิดปกติทางสถิติ</h3>
       <div class="sub">Shipment ที่ใช้เวลารวม (Gate แรกถึง Gate สุดท้าย) สูงกว่า "ค่าเฉลี่ย + 2 เท่าของส่วนเบี่ยงเบนมาตรฐาน (SD)" ของ Shipment ทั้งหมดตามตัวกรองปัจจุบัน ถือเป็นค่าผิดปกติทางสถิติ (นอกกลุ่มปกติ ~95% ตามหลัก Normal Distribution) ควรตรวจสอบสาเหตุเป็นพิเศษ — คลิกที่แถวเพื่อดูไทม์ไลน์เต็ม</div>
       <div class="kpi-grid" id="kpiShipmentAlert" style="margin-bottom:14px;"></div>
-      <table><thead><tr><th>#</th><th>Shipment</th><th>เวลารวม</th><th>รถ</th><th>SKU</th><th>Gate</th></tr></thead><tbody id="shipmentAlertTableBody"></tbody></table>
+      <table><thead><tr><th>#</th><th>Shipment</th><th>ลูกค้า</th><th>เวลารวม</th><th>รถ</th><th>SKU</th><th>Gate</th></tr></thead><tbody id="shipmentAlertTableBody"></tbody></table>
     </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>Funnel กระบวนการทำงาน (Process Funnel)</h2><p>ดูว่า Shipment หลุด/ค้างอยู่ที่ขั้นไหนมากที่สุด ตั้งแต่ชั่งน้ำหนักเริ่มต้นจนออก Gate</p></div></div>
@@ -1335,6 +1335,11 @@ function render(model){
   const top10 = shipmentList.slice().sort((a,b)=>b.weight-a.weight).slice(0,10);
   const typeBadge = t => /inbound/i.test(t) ? '<span class="badge in">ขาเข้า</span>' : /return/i.test(t) ? '<span class="badge ret">คืนสินค้า</span>' : '<span class="badge out">ขาออก</span>';
   const statusBadge = s => /urgent/i.test(s) ? '<span class="badge urg">ด่วน</span>' : /customer/i.test(s) ? '<span class="badge cus">ลูกค้ารับเอง</span>' : '<span class="badge nor">ปกติ</span>';
+  // ชื่อลูกค้า (ตัดคำนำหน้าแล้ว) สำหรับแสดงในตาราง Top Shipment ต่างๆ — ตัดให้สั้นถ้ายาวเกินไป พร้อม title เต็ม
+  const custCell = r => {
+    const name = cleanCustomerName(r.soldTo) || 'ไม่ระบุ';
+    return `<td style="max-width:160px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${name.replace(/"/g,'&quot;')}">${name}</td>`;
+  };
   const maxW = Math.max(...top10.map(r=>r.weight),1);
 
   const linesByShipment = new Map();
@@ -1362,11 +1367,11 @@ function render(model){
     return `
     <tr class="top-row" data-sid="${r.id}">
       <td style="font-weight:600;color:var(--navy-800)"><span class="row-chevron">▸</span>${i+1}</td>
-      <td>${r.id}</td><td>${typeBadge(r.jobtype)}</td><td>${statusBadge(r.status)}</td><td>${r.vehicleCode}</td>
+      <td>${r.id}</td>${custCell(r)}<td>${typeBadge(r.jobtype)}</td><td>${statusBadge(r.status)}</td><td>${r.vehicleCode}</td>
       <td>${r.weight.toLocaleString(undefined,{maximumFractionDigits:1})}<div class="bar-mini"><i style="width:${(r.weight/maxW*100).toFixed(0)}%"></i></div></td><td>${r.lineCount}</td>
     </tr>
     <tr class="top-detail-row" data-sid-detail="${r.id}" style="display:none;">
-      <td colspan="7">
+      <td colspan="8">
         <div class="detail-grid">
           <div class="detail-col">
             <div class="detail-col-title">ไทม์ไลน์ทั้งหมด (${shipGates.length} Gate)</div>
@@ -1395,11 +1400,11 @@ function render(model){
     return `
     <tr class="top-row" data-sid="${r.id}">
       <td style="font-weight:600;color:var(--navy-800)"><span class="row-chevron">▸</span>${i+1}</td>
-      <td>${r.id}</td><td>${typeBadge(r.jobtype)}</td><td>${statusBadge(r.status)}</td><td>${r.vehicleCode}</td>
+      <td>${r.id}</td>${custCell(r)}<td>${typeBadge(r.jobtype)}</td><td>${statusBadge(r.status)}</td><td>${r.vehicleCode}</td>
       <td>${r.lineCount}<div class="bar-mini"><i style="width:${(r.lineCount/maxSku*100).toFixed(0)}%"></i></div></td><td>${r.weight.toLocaleString(undefined,{maximumFractionDigits:1})}</td>
     </tr>
     <tr class="top-detail-row" data-sid-detail="${r.id}" style="display:none;">
-      <td colspan="7">
+      <td colspan="8">
         <div class="detail-grid">
           <div class="detail-col">
             <div class="detail-col-title">ไทม์ไลน์ทั้งหมด (${shipGates.length} Gate)</div>
@@ -1443,7 +1448,7 @@ function render(model){
 
   if(top10Span.length){
     document.getElementById('timeCompareTable').innerHTML = `
-      <table class="time-table"><thead><tr><th>#</th><th>Shipment</th><th>เวลารวม</th><th>SKU (จำนวนรายการ)</th><th>Gate ที่ผ่าน</th></tr></thead><tbody>
+      <table class="time-table"><thead><tr><th>#</th><th>Shipment</th><th>ลูกค้า</th><th>เวลารวม</th><th>SKU (จำนวนรายการ)</th><th>Gate ที่ผ่าน</th></tr></thead><tbody>
       ${top10Span.map((s,i)=>{
         const shipLines = linesByShipment.get(s.id) || [];
         const shipGates = gatesByShipment.get(s.id) || []; // เรียงตามเวลาเข้าจริง (checkIn) จากก่อนไปหลังแล้ว
@@ -1455,12 +1460,13 @@ function render(model){
         <tr class="tt-row top-row" data-sid="${s.id}">
           <td class="tt-rank"><span class="row-chevron">▸</span>${i+1}</td>
           <td class="tt-id">${s.id}</td>
+          ${custCell(s)}
           <td class="tt-num">${fmtMin(s.span)}</td>
           <td class="tt-num">${s.lineCount} ${rankChip(linesRank.get(s.id))}</td>
           <td class="tt-num">${s.gateList.length} ${rankChip(gatesRank.get(s.id))}</td>
         </tr>
         <tr class="tt-detail-row top-detail-row" data-sid-detail="${s.id}" style="display:none;">
-          <td colspan="5">
+          <td colspan="6">
             <div class="detail-grid">
               <div class="detail-col">
                 <div class="detail-col-title">ไทม์ไลน์ทั้งหมด (${shipGates.length} Gate)</div>
@@ -1555,13 +1561,14 @@ function render(model){
       <tr class="top-row" data-sid="${s.id}">
         <td style="font-weight:600;color:var(--navy-800)"><span class="row-chevron">▸</span>${i+1}</td>
         <td>${s.id}</td>
+        ${custCell(s)}
         <td>${fmtMin(s.span)}</td>
         <td>${s.vehicleCode}</td>
         <td>${s.lineCount}</td>
         <td>${s.gateList.length}</td>
       </tr>
       <tr class="top-detail-row" data-sid-detail="${s.id}" style="display:none;">
-        <td colspan="6">
+        <td colspan="7">
           <div class="detail-grid">
             <div class="detail-col">
               <div class="detail-col-title">ไทม์ไลน์ทั้งหมด (${shipGates.length} Gate)</div>
