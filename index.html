@@ -191,6 +191,12 @@
      ที่คั่นกลางระหว่างแถวด้วยสไตล์สีเทา/เส้นประ ให้แยกความหมายชัดเจนไม่ปนกัน */
   .gate-gap-connector{display:flex; align-items:center; gap:5px; padding:4px 0 4px 4px; margin:-2px 0; font-size:11px; color:var(--grey-500); border-left:2px dashed var(--grey-200); margin-left:9px; padding-left:11px;}
   .gap-arrow{color:var(--grey-400); font-size:11px;}
+  .timeline-total{font-size:12px; color:var(--navy-800); background:var(--navy-100); border-radius:8px; padding:8px 12px; margin-bottom:8px;}
+  .timeline-total b{color:var(--navy-900);}
+  .stage-row{background:rgba(255,107,53,.04);}
+  .stage-order{background:var(--orange-100); color:var(--orange-600);}
+  .stage-time{color:var(--grey-600); font-weight:500;}
+  .gate-avg-note{color:var(--grey-400); font-weight:400; font-size:10.5px; display:block; margin-top:1px;}
   .detail-gate-time{color:var(--orange-600); font-weight:600; white-space:nowrap;}
   .detail-mat-name{color:var(--grey-800); font-weight:300; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .detail-mat-weight{color:var(--navy-800); font-weight:600; white-space:nowrap;}
@@ -350,7 +356,7 @@
     <div class="panel reveal"><h3>คู่สินค้าที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองกลุ่มร่วมกัน (Product Group)</div><div class="chart-box tall" id="chCooccur"></div></div>
     <div class="panel reveal"><h3>คู่ Material Desc ที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองรายการนี้ร่วมกัน — เรียงจากบ่อยที่สุด</div><div id="chMaterialCooccur"></div></div>
     <div class="panel reveal"><h3>Top 10 Shipment น้ำหนักสูงสุด</h3>
-      <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูรายละเอียด Gate ที่ผ่าน (เรียงตามเวลาเข้าจริง ก่อน-หลัง) และสินค้าในเที่ยวนั้น เวลาที่ใช้ต่อ Gate (สีส้ม) = Running Time จากระบบต้นทาง ส่วนเส้นประคั่นระหว่างแถว = ช่องว่างก่อนเข้า Gate ถัดไป (เช็คอิน Gate ถัดไป − เช็คเอาท์ Gate นี้)</div>
+      <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูไทม์ไลน์เต็ม (ชั่งน้ำหนักเริ่มต้น → Shipment → Center → Gate ทุกจุด → ชั่งน้ำหนักสำเร็จ เรียงตามเวลาจริง) และสินค้าในเที่ยวนั้น เวลาที่ใช้ต่อ Gate (สีส้ม) = Running Time จากระบบต้นทาง เทียบกับค่าเฉลี่ยของ Gate นั้นทั้งระบบ ส่วนเส้นประคั่นระหว่างจุด = ช่องว่างก่อนเข้าจุดถัดไป</div>
       <table><thead><tr><th>#</th><th>Shipment</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th></tr></thead><tbody id="topTableBody"></tbody></table>
     </div>
 
@@ -358,7 +364,7 @@
     <div class="kpi-grid reveal" id="kpiBottleneck"></div>
     <div class="panel reveal">
       <h3>Top 10 Shipment ที่ใช้เวลารวมนานที่สุด</h3>
-      <div class="sub">เวลารวม = เวลาตั้งแต่เข้า Gate แรกจนออก Gate สุดท้าย (นาที) — แสดงคู่กับจำนวนรายการสินค้า (SKU) และจำนวน Gate ที่ผ่านในเที่ยวนั้น เพื่อดูว่าเวลาที่มากขึ้นสอดคล้องกับ SKU/Gate ที่มากขึ้นหรือไม่ · คลิกที่แถวเพื่อดูลำดับ Gate ที่ผ่าน เรียงตามเวลาเข้าจริง ก่อน-หลัง (เวลาที่ใช้ต่อ Gate = Running Time จากระบบต้นทาง, เส้นประคั่นระหว่างแถว = ช่องว่างก่อนเข้า Gate ถัดไป)</div>
+      <div class="sub">เวลารวม = เวลาตั้งแต่เข้า Gate แรกจนออก Gate สุดท้าย (นาที) — แสดงคู่กับจำนวนรายการสินค้า (SKU) และจำนวน Gate ที่ผ่านในเที่ยวนั้น เพื่อดูว่าเวลาที่มากขึ้นสอดคล้องกับ SKU/Gate ที่มากขึ้นหรือไม่ · คลิกที่แถวเพื่อดูไทม์ไลน์เต็มตั้งแต่ชั่งน้ำหนักเริ่มต้นจนชั่งน้ำหนักสำเร็จ เรียงตามเวลาจริง</div>
       <div id="timeCompareTable"></div>
     </div>
     <div class="panel reveal">
@@ -761,23 +767,50 @@ function fmtPct(part, total){ return total>0 ? (part/total*100).toFixed(1)+'%' :
 // แปลง "นาทีของวัน" (0-1439) กลับเป็นเวลานาฬิกา HH:MM สำหรับแสดงเวลาเข้า Gate จริง
 function fmtClock(m){ if(m===null||m===undefined) return null; const h=Math.floor(m/60)%24, mm=Math.round(m%60); return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; }
 
-// สร้าง HTML รายการ Gate ที่ผ่าน (เรียงตามเวลาเข้าจริงแล้ว) พร้อม "เวลาที่ใช้ที่ Gate" (ตัวเลขสีส้ม
-// = Running Time จากระบบต้นทาง) และ "ช่องว่างก่อนเข้า Gate ถัดไป" (คั่นกลางระหว่างแถว, สีเทา) ซึ่ง
-// คำนวณเองจาก checkIn ของ Gate ถัดไป ลบ checkOut ของ Gate นี้ -- ตรวจสอบแล้วว่าค่านี้ตรงกับคอลัมน์
-// Lost Time เวลาที่รถรอเข้า Gate ของระบบต้นทาง 93.1% เป๊ะ (แค่ผูกกับ Gate คนละแถวจากที่ชื่อคอลัมน์
-// สื่อ) การคำนวณเองตรงนี้จึงแม่นยำและสอดคล้องกับลำดับเวลาที่แสดงเสมอ 100%
-function buildGateChipsHtml(shipGates){
-  if(!shipGates.length) return `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูล Gate</div>`;
-  return shipGates.map((g,gi)=>{
-    const row = `<div class="detail-gate-row"><span class="detail-gate-name"><b class="gate-order">${gi+1}</b> Gate ${g.gate}${fmtClock(g.checkIn) ? ' · เข้า '+fmtClock(g.checkIn)+' น.' : ''}</span><span class="detail-gate-time">${g.minutes!=null ? fmtMin(g.minutes) : 'ไม่มีข้อมูลเวลา'}</span></div>`;
-    const next = shipGates[gi+1];
+// สร้าง HTML ไทม์ไลน์เต็มของ 1 Shipment ตั้งแต่จุดแรกจนจุดสุดท้าย โดยรวม 4 สเตจหลัก
+// (ชั่งน้ำหนักเริ่มต้น / เริ่ม Shipment / เข้า Center / ชั่งน้ำหนักสำเร็จ) เข้ากับ Gate ที่ผ่านทุกจุด
+// แล้วเรียงตามเวลาจริงทั้งหมด (ไม่ใช่ยึดว่า Gate ต้องอยู่หลังสเตจเสมอ เพราะข้อมูลจริงพบว่าลำดับ
+// สลับกันได้ เช่น Shipment Time บางเที่ยวมาก่อน Weight Start) แต่ละ Gate จะโชว์ "เวลาที่ใช้ที่ Gate"
+// (ตัวเลขสีส้ม = Running Time จากระบบต้นทาง) เทียบกับค่าเฉลี่ยของ Gate นั้นทั้งระบบ และคั่นด้วย
+// เส้นประ "ห่าง X นาที" ระหว่างทุกจุด (คำนวณเองจากเวลาออกจากจุดก่อนหน้า ถึงเวลาเข้าจุดถัดไป --
+// ตรวจสอบแล้วว่ากรณี Gate-to-Gate ตรงกับคอลัมน์ Lost Time ของระบบต้นทาง 93.1%) ส่วนบนสุดสรุป
+// "รวมเวลาทั้งหมด" = จากจุดแรกสุดถึงจุดสุดท้ายสุดที่มีข้อมูล
+function buildTimelineHtml(sh, shipGates, gateAvgMap){
+  const stagePoints = [
+    { kind:'stage', label:'ชั่งน้ำหนักเริ่มต้น (Weight Start)', time: sh.wStartMin },
+    { kind:'stage', label:'เริ่ม Shipment (Shipment Time)', time: sh.shipTimeMin },
+    { kind:'stage', label:'เข้า Center (Center Time)', time: sh.centerTimeMin },
+    { kind:'stage', label:'ชั่งน้ำหนักสำเร็จ (Weight Success)', time: sh.wSuccessMin },
+  ].filter(p => p.time !== null && p.time !== undefined);
+  const gatePoints = shipGates.map(g => ({ kind:'gate', label:`Gate ${g.gate}`, time: g.checkIn, checkOut: g.checkOut, minutes: g.minutes }))
+    .filter(p => p.time !== null && p.time !== undefined);
+  const all = [...stagePoints, ...gatePoints].sort((a,b)=>a.time-b.time);
+  if(!all.length) return { rowsHtml: `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูลเวลา</div>`, totalHtml: '' };
+
+  const rowsHtml = all.map((p,i)=>{
+    let row;
+    if(p.kind === 'gate'){
+      const gateAvg = gateAvgMap && gateAvgMap[p.label.replace('Gate ','')];
+      const avgNote = (gateAvg!==undefined && p.minutes!=null) ? ` <span class="gate-avg-note">(เฉลี่ยของ Gate นี้ ${fmtMin(gateAvg)})</span>` : '';
+      row = `<div class="detail-gate-row"><span class="detail-gate-name"><b class="gate-order">${i+1}</b> ${p.label}${fmtClock(p.time) ? ' · เข้า '+fmtClock(p.time)+' น.' : ''}</span><span class="detail-gate-time">${p.minutes!=null ? fmtMin(p.minutes) : 'ไม่มีข้อมูลเวลา'}${avgNote}</span></div>`;
+    } else {
+      row = `<div class="detail-gate-row stage-row"><span class="detail-gate-name"><b class="gate-order stage-order">${i+1}</b> ${p.label}</span><span class="detail-gate-time stage-time">${fmtClock(p.time)} น.</span></div>`;
+    }
+    const next = all[i+1];
     let gapHtml = '';
-    if(next && g.checkOut!==null && g.checkOut!==undefined && next.checkIn!==null && next.checkIn!==undefined){
-      let gap = next.checkIn - g.checkOut; if(gap < 0) gap += 1440;
-      gapHtml = `<div class="gate-gap-connector"><span class="gap-arrow">↓</span>ห่าง ${fmtMin(gap)} ก่อนเข้า Gate ถัดไป</div>`;
+    if(next){
+      const endTime = (p.kind==='gate' && p.checkOut!==null && p.checkOut!==undefined) ? p.checkOut : p.time;
+      let gap = next.time - endTime; if(gap < 0) gap += 1440;
+      gapHtml = `<div class="gate-gap-connector"><span class="gap-arrow">↓</span>ห่าง ${fmtMin(gap)}</div>`;
     }
     return row + gapHtml;
   }).join('');
+
+  const first = all[0], last = all[all.length-1];
+  const lastEnd = (last.kind==='gate' && last.checkOut!==null && last.checkOut!==undefined) ? last.checkOut : last.time;
+  let totalSpan = lastEnd - first.time; if(totalSpan < 0) totalSpan += 1440;
+  const totalHtml = `<div class="timeline-total">รวมเวลาทั้งหมด: <b>${fmtClock(first.time)} → ${fmtClock(lastEnd)} น.</b> = <b>${fmtMin(totalSpan)}</b></div>`;
+  return { rowsHtml, totalHtml };
 }
 
 // Pearson correlation coefficient between two equal-length numeric arrays.
@@ -917,6 +950,12 @@ function buildModel(csvText){
         hasShipTime: !!(r[idx.shipTime] && r[idx.shipTime].trim()),
         hasCenterTime: !!(r[idx.centerTime] && r[idx.centerTime].trim()),
         hasWSuccess: !!(r[idx.wSuccess] && r[idx.wSuccess].trim()),
+        // เวลานาฬิกาจริงของแต่ละสเตจ (นาทีของวัน) — ค่าคงที่ต่อ 1 เที่ยว อ่านจากแถวแรกพอ
+        // ใช้ทำไทม์ไลน์รวมทั้งหมดตั้งแต่เริ่มต้นจนจบ (ชั่งน้ำหนักเริ่มต้น → Shipment → Gate → ชั่งน้ำหนักสำเร็จ)
+        wStartMin: parseClock(r[idx.wStart]),
+        shipTimeMin: parseClock(r[idx.shipTime]),
+        centerTimeMin: parseClock(r[idx.centerTime]),
+        wSuccessMin: parseClock(r[idx.wSuccess]),
       });
     }
     const sh = shipments.get(sid);
@@ -1069,6 +1108,9 @@ function render(model){
   gateVisits.forEach(v=>{ if(!gateStats[v.gate]) gateStats[v.gate] = []; gateStats[v.gate].push(v.minutes); });
   const gateRows = Object.entries(gateStats).map(([gate,arr])=>({label:gate, avg: arr.reduce((a,b)=>a+b,0)/arr.length, max: Math.max(...arr), count: arr.length})).sort((a,b)=>b.avg-a.avg).slice(0,10);
   renderBars('chTimeByGate', gateRows.map(r=>({label:`Gate ${r.label} (${r.count})`, fullLabel:`Gate ${r.label}`, value:r.avg, valueLabel: fmtMin(r.avg), color:`linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`, tooltip:`<b>Gate ${r.label}</b><br>เฉลี่ย ${fmtMin(r.avg)} · สูงสุด ${fmtMin(r.max)} · ${r.count} ครั้ง`})), {});
+  // ค่าเฉลี่ยเวลาที่ใช้ต่อ Gate (ทุก Gate ไม่ตัดเหลือ Top 10) ไว้ใช้เทียบในไทม์ไลน์รายเที่ยว
+  const gateAvgMap = {};
+  Object.entries(gateStats).forEach(([gate,arr])=>{ gateAvgMap[gate] = arr.reduce((a,b)=>a+b,0)/arr.length; });
 
   const hourCounts = {};
   shipmentList.forEach(s=>{ if(s.firstIn===null) return; const h = Math.floor(s.firstIn/60); hourCounts[h] = (hourCounts[h]||0)+1; });
@@ -1187,7 +1229,7 @@ function render(model){
   document.getElementById('topTableBody').innerHTML = top10.map((r,i)=>{
     const shipLines = linesByShipment.get(r.id) || [];
     const shipGates = gatesByShipment.get(r.id) || []; // เรียงตามเวลาเข้าจริง (checkIn) จากก่อนไปหลังแล้ว
-    const gateChips = buildGateChipsHtml(shipGates);
+    const timeline = buildTimelineHtml(r, shipGates, gateAvgMap);
     const matRowsHtml = shipLines.length
       ? shipLines.map(l=>`<div class="detail-mat-row"><span class="detail-mat-name" title="${(l.materialDesc||'').replace(/"/g,'&quot;')}">${l.materialDesc || '(ไม่ระบุ)'}</span><span class="detail-mat-weight">${l.weight.toLocaleString(undefined,{maximumFractionDigits:0})} กก.</span></div>`).join('')
       : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูลสินค้า</div>`;
@@ -1201,8 +1243,9 @@ function render(model){
       <td colspan="7">
         <div class="detail-grid">
           <div class="detail-col">
-            <div class="detail-col-title">Gate ที่ผ่าน (${shipGates.length}) — เวลาแต่ละจุด</div>
-            ${gateChips}
+            <div class="detail-col-title">ไทม์ไลน์ทั้งหมด (${shipGates.length} Gate)</div>
+            ${timeline.totalHtml}
+            ${timeline.rowsHtml}
           </div>
           <div class="detail-col">
             <div class="detail-col-title">สินค้าในเที่ยวนี้ (${shipLines.length} รายการ)</div>
@@ -1245,7 +1288,7 @@ function render(model){
       ${top10Span.map((s,i)=>{
         const shipLines = linesByShipment.get(s.id) || [];
         const shipGates = gatesByShipment.get(s.id) || []; // เรียงตามเวลาเข้าจริง (checkIn) จากก่อนไปหลังแล้ว
-        const gateChips = buildGateChipsHtml(shipGates);
+        const timeline = buildTimelineHtml(s, shipGates, gateAvgMap);
         const matRowsHtml = shipLines.length
           ? shipLines.map(l=>`<div class="detail-mat-row"><span class="detail-mat-name" title="${(l.materialDesc||'').replace(/"/g,'&quot;')}">${l.materialDesc || '(ไม่ระบุ)'}</span><span class="detail-mat-weight">${l.weight.toLocaleString(undefined,{maximumFractionDigits:0})} กก.</span></div>`).join('')
           : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูลสินค้า</div>`;
@@ -1261,8 +1304,9 @@ function render(model){
           <td colspan="5">
             <div class="detail-grid">
               <div class="detail-col">
-                <div class="detail-col-title">Gate ที่ผ่าน (${shipGates.length}) — เวลาแต่ละจุด</div>
-                ${gateChips}
+                <div class="detail-col-title">ไทม์ไลน์ทั้งหมด (${shipGates.length} Gate)</div>
+                ${timeline.totalHtml}
+                ${timeline.rowsHtml}
               </div>
               <div class="detail-col">
                 <div class="detail-col-title">สินค้าในเที่ยวนี้ (${shipLines.length} รายการ)</div>
