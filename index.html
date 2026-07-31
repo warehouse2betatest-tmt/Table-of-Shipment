@@ -280,6 +280,17 @@
   .bar-row .b-fill:hover{filter:brightness(1.12);}
   .bar-row .b-val{width:150px; flex-shrink:0; font-size:11.5px; font-weight:600; color:var(--navy-900); white-space:nowrap; text-align:right; overflow:hidden; text-overflow:ellipsis;}
   .b-val .b-max{display:block; font-size:10px; font-weight:400; color:var(--grey-500); margin-top:1px;}
+  .peak-note{display:inline-flex; align-items:center; gap:5px; margin-top:8px; padding:4px 11px; border-radius:100px; background:var(--orange-100); color:var(--orange-600); font-size:11px; font-weight:600;}
+  .peak-note b{font-weight:700;}
+
+  .line-stat-box{position:absolute; top:6px; right:6px; display:flex; gap:12px; background:rgba(255,255,255,.94); border:1px solid var(--grey-100); border-radius:10px; padding:7px 12px; box-shadow:var(--shadow-sm); backdrop-filter:blur(3px); z-index:2;}
+  .line-stat-box .ls-item{display:flex; flex-direction:column; align-items:center; gap:1px; min-width:44px;}
+  .line-stat-box .ls-label{color:var(--grey-400); font-size:9px; font-weight:500; text-transform:uppercase; letter-spacing:.3px;}
+  .line-stat-box .ls-val{font-weight:700; font-size:12px; color:var(--navy-900); font-variant-numeric:tabular-nums;}
+  .line-stat-box .ls-val.hi{color:var(--orange-600);}
+  .line-stat-box .ls-val.lo{color:var(--navy-700);}
+  .line-stat-box .ls-sep{width:1px; background:var(--grey-100); align-self:stretch;}
+  @media(max-width:640px){ .line-stat-box{position:static; margin:0 0 10px auto; width:max-content;} }
 
   .empty-note{color:var(--grey-400); font-size:12.5px; font-weight:300; text-align:center; padding:40px 10px;}
 
@@ -393,8 +404,8 @@
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>ช่วงเวลาที่รถหนาแน่นที่สุด</h2><p>จำนวน Shipment แยกตามชั่วโมงที่เข้า Gate ครั้งแรก และชั่วโมงที่ออกจาก Gate สุดท้าย</p></div></div>
     <div class="grid-2 reveal">
-      <div class="panel"><h3>จำนวนเที่ยวรถตามช่วงเวลา (เข้า)</h3><div class="sub">ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment</div><div class="chart-box tall" id="chHourly"></div></div>
-      <div class="panel"><h3>จำนวนเที่ยวรถตามช่วงเวลา (ออก)</h3><div class="sub">ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment</div><div class="chart-box tall" id="chHourlyOut"></div></div>
+      <div class="panel"><h3>จำนวนเที่ยวรถตามช่วงเวลา (เข้า)</h3><div class="sub" id="chHourlySub">ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment · แสดงครบ 24 ชั่วโมงเพื่อเทียบกับกราฟฝั่งขวา</div><div class="chart-box tall" id="chHourly"></div></div>
+      <div class="panel"><h3>จำนวนเที่ยวรถตามช่วงเวลา (ออก)</h3><div class="sub" id="chHourlyOutSub">ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment · แสดงครบ 24 ชั่วโมงเพื่อเทียบกับกราฟฝั่งซ้าย</div><div class="chart-box tall" id="chHourlyOut"></div></div>
     </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>การใช้งานยานพาหนะ (Fleet Utilization)</h2><p>จัดกลุ่มตามตาราง Type: TL / 10W / 12W / 6W / 4W / Pickup / พ่วงแม่-ลูก</p></div></div>
@@ -867,6 +878,23 @@ function renderLineChart(containerId, points, opts={}){
   });
 
   container.innerHTML = ''; container.appendChild(svg);
+
+  // กล่องเล็กมุมขวาบน สรุปค่าต่ำสุด/เฉลี่ย/สูงสุดของกราฟเส้นนี้ ให้เห็นภาพรวมได้ทันที
+  // โดยไม่ต้องไล่เม้าส์ชี้ทีละจุด — ใช้ valueLabelFmt เดียวกับตัวเลขกำกับบนเส้น เพื่อให้หน่วย/ทศนิยมตรงกัน
+  if(opts.showStats !== false){
+    const ys = points.map(p=>p.y);
+    const min = Math.min(...ys), max = Math.max(...ys), avg = ys.reduce((a,b)=>a+b,0)/ys.length;
+    const fmt = opts.valueLabelFmt || (v => Math.round(v).toLocaleString());
+    const statBox = document.createElement('div');
+    statBox.className = 'line-stat-box';
+    statBox.innerHTML = `
+      <div class="ls-item"><span class="ls-label">ต่ำสุด</span><span class="ls-val lo">${fmt(min)}</span></div>
+      <div class="ls-sep"></div>
+      <div class="ls-item"><span class="ls-label">เฉลี่ย</span><span class="ls-val">${fmt(avg)}</span></div>
+      <div class="ls-sep"></div>
+      <div class="ls-item"><span class="ls-label">สูงสุด</span><span class="ls-val hi">${fmt(max)}</span></div>`;
+    container.appendChild(statBox);
+  }
 }
 
 function animateCount(el, target, decimals=0){
@@ -1251,6 +1279,8 @@ function render(model){
     ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chHourlyOut','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCooccur','chMaterialCooccur','chReturnCustomer','chReturnMaterial','chTopShipTo','chWeightHist','chDowTrend','chDailyCount','chDailyWeight','chWeeklyCount','chWeeklyWeight','chMonthlyCount','chMonthlyWeight'].forEach(id=>emptyState(id));
     document.getElementById('legJobType').innerHTML=''; document.getElementById('legStatus').innerHTML=''; document.getElementById('legVehicleShare').innerHTML='';
     document.getElementById('chIssueSub').textContent = 'จำนวนเที่ยวรถที่มีหมายเหตุปัญหา แยกตามประเภท';
+    document.getElementById('chHourlySub').textContent = 'ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment';
+    document.getElementById('chHourlyOutSub').textContent = 'ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment';
     document.getElementById('alertBanner').innerHTML = `<div class="lead">No Data</div><h3>ไม่มีข้อมูลตามตัวกรองที่เลือก</h3><p>ลองล้างตัวกรองหรือเลือกเดือน/ประเภทรถ/Gate อื่น</p>`;
     document.getElementById('topTableBody').innerHTML = '';
     document.getElementById('topSkuTableBody').innerHTML = '';
@@ -1333,16 +1363,37 @@ function render(model){
   const gateAvgMap = {};
   Object.entries(gateStats).forEach(([gate,arr])=>{ gateAvgMap[gate] = arr.reduce((a,b)=>a+b,0)/arr.length; });
 
-  const hourCounts = {};
-  shipmentList.forEach(s=>{ if(s.firstIn===null) return; const h = Math.floor(s.firstIn/60); hourCounts[h] = (hourCounts[h]||0)+1; });
-  const hourRows = Object.entries(hourCounts).map(([h,c])=>({h:parseInt(h), c})).sort((a,b)=>a.h-b.h);
-  renderBars('chHourly', hourRows.map(r=>({label:`${String(r.h).padStart(2,'0')}:00`, value:r.c, color: `linear-gradient(90deg, ${NAVY2}, ${NAVY3})`})), {unit:'เที่ยว'});
+  // ทั้งสองกราฟ (เข้า/ออก) แสดงครบ 24 ชั่วโมงเสมอ (เติม 0 ในชั่วโมงที่ไม่มีข้อมูล) เพื่อให้
+  // จำนวนแถวเท่ากันและเรียงตรงกันทั้งสองฝั่ง เทียบกันง่าย ("สมดุล") แทนที่จะโชว์เฉพาะชั่วโมง
+  // ที่มีข้อมูลซึ่งทำให้จำนวนแถวซ้าย-ขวาไม่เท่ากันและดูเยื้องกัน
+  const hourCounts = {}; let totalIn = 0;
+  shipmentList.forEach(s=>{ if(s.firstIn===null) return; const h = Math.floor(s.firstIn/60); hourCounts[h] = (hourCounts[h]||0)+1; totalIn++; });
+  const hourRows = Array.from({length:24}, (_,h)=>({h, c: hourCounts[h]||0}));
+  renderBars('chHourly', hourRows.map(r=>({
+    label:`${String(r.h).padStart(2,'0')}:00`, value:r.c,
+    valueLabel: `${r.c.toLocaleString()} (${fmtPct(r.c,totalIn)})`,
+    color: `linear-gradient(90deg, ${NAVY2}, ${NAVY3})`,
+    tooltip:`<b>${String(r.h).padStart(2,'0')}:00 น.</b><br>${r.c.toLocaleString()} เที่ยวเข้า Gate แรก (${fmtPct(r.c,totalIn)} ของทั้งหมด)`
+  })), {unit:'เที่ยว'});
+  const peakIn = hourRows.reduce((best,r)=> r.c>best.c ? r : best, hourRows[0]);
+  document.getElementById('chHourlySub').innerHTML = totalIn
+    ? `ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment · แสดงครบ 24 ชั่วโมงเพื่อเทียบกับกราฟฝั่งขวา<br><span class="peak-note">🔺 ช่วงเวลาที่รถเข้ามากที่สุด: <b>${String(peakIn.h).padStart(2,'0')}:00 น.</b> (${peakIn.c.toLocaleString()} เที่ยว · ${fmtPct(peakIn.c,totalIn)})</span>`
+    : 'ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment';
 
   // ---- ชั่วโมงที่รถ "ออก" จาก Gate สุดท้ายมากที่สุด (คู่กับกราฟ "เข้า" ด้านบน) ----
-  const hourOutCounts = {};
-  shipmentList.forEach(s=>{ if(s.lastOut===null) return; const h = Math.floor(s.lastOut/60); hourOutCounts[h] = (hourOutCounts[h]||0)+1; });
-  const hourOutRows = Object.entries(hourOutCounts).map(([h,c])=>({h:parseInt(h), c})).sort((a,b)=>a.h-b.h);
-  renderBars('chHourlyOut', hourOutRows.map(r=>({label:`${String(r.h).padStart(2,'0')}:00`, value:r.c, color: `linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`})), {unit:'เที่ยว'});
+  const hourOutCounts = {}; let totalOut = 0;
+  shipmentList.forEach(s=>{ if(s.lastOut===null) return; const h = Math.floor(s.lastOut/60); hourOutCounts[h] = (hourOutCounts[h]||0)+1; totalOut++; });
+  const hourOutRows = Array.from({length:24}, (_,h)=>({h, c: hourOutCounts[h]||0}));
+  renderBars('chHourlyOut', hourOutRows.map(r=>({
+    label:`${String(r.h).padStart(2,'0')}:00`, value:r.c,
+    valueLabel: `${r.c.toLocaleString()} (${fmtPct(r.c,totalOut)})`,
+    color: `linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`,
+    tooltip:`<b>${String(r.h).padStart(2,'0')}:00 น.</b><br>${r.c.toLocaleString()} เที่ยวออกจาก Gate สุดท้าย (${fmtPct(r.c,totalOut)} ของทั้งหมด)`
+  })), {unit:'เที่ยว'});
+  const peakOut = hourOutRows.reduce((best,r)=> r.c>best.c ? r : best, hourOutRows[0]);
+  document.getElementById('chHourlyOutSub').innerHTML = totalOut
+    ? `ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment · แสดงครบ 24 ชั่วโมงเพื่อเทียบกับกราฟฝั่งซ้าย<br><span class="peak-note">🔺 ช่วงเวลาที่รถออกมากที่สุด: <b>${String(peakOut.h).padStart(2,'0')}:00 น.</b> (${peakOut.c.toLocaleString()} เที่ยว · ${fmtPct(peakOut.c,totalOut)})</span>`
+    : 'ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment';
 
   const vehicleAgg = {};
   shipmentList.forEach(s=>{ const code = s.vehicleCode; if(!vehicleAgg[code]) vehicleAgg[code] = {count:0, weight:0}; vehicleAgg[code].count++; vehicleAgg[code].weight += s.weight/1000; });
