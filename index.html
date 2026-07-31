@@ -841,8 +841,16 @@ function buildTimelineHtml(sh, shipGates, gateAvgMap){
     let gapHtml = '';
     if(next){
       const endTime = (p.kind==='gate' && p.checkOut!==null && p.checkOut!==undefined) ? p.checkOut : p.time;
-      let gap = next.time - endTime; if(gap < 0) gap += 1440;
-      gapHtml = `<div class="gate-gap-connector"><span class="gap-arrow">↓</span>ห่าง ${fmtMin(gap)}</div>`;
+      let gap = next.time - endTime;
+      if(gap < 0){
+        // ลิสต์นี้เรียงตามเวลาจริงมาแล้ว (next.time ต้องไม่มาก่อนจุดนี้ในวันเดียวกันเสมอ) ค่า
+        // ติดลบที่เกิดขึ้นแทบทั้งหมดคือ checkOut (ที่มาจากคอลัมน์ Running Time บวก checkIn)
+        // ไปทับซ้อนกับเวลาเข้าของจุดถัดไปเล็กน้อย -- ไม่ใช่การข้ามวันจริง จึงปัดเป็น "ซ้อนทับ"
+        // (0 นาที) การ +1440 ข้ามวันทำได้แค่กรณีเดียวคือจุดนี้เป็นจุด "เมื่อวาน" ที่ยืนยันแล้ว
+        gap = p.prevDay ? gap + 1440 : 0;
+      }
+      const gapLabel = gap === 0 ? 'เวลาซ้อนทับกัน' : 'ห่าง ' + fmtMin(gap);
+      gapHtml = `<div class="gate-gap-connector"><span class="gap-arrow">↓</span>${gapLabel}</div>`;
     }
     return row + gapHtml;
   }).join('');
