@@ -242,6 +242,7 @@
   .bar-row .b-fill{height:100%; width:0; border-radius:8px; cursor:pointer; transition:width 1s cubic-bezier(.2,.8,.2,1), filter .2s ease; background:linear-gradient(90deg,var(--navy-700),var(--navy-500));}
   .bar-row .b-fill:hover{filter:brightness(1.12);}
   .bar-row .b-val{width:150px; flex-shrink:0; font-size:11.5px; font-weight:600; color:var(--navy-900); white-space:nowrap; text-align:right;}
+  .b-val .b-max{display:block; font-size:10px; font-weight:400; color:var(--grey-500); margin-top:1px;}
 
   .empty-note{color:var(--grey-400); font-size:12.5px; font-weight:300; text-align:center; padding:40px 10px;}
 
@@ -358,6 +359,10 @@
     <div class="panel reveal"><h3>Top 10 Shipment น้ำหนักสูงสุด</h3>
       <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูไทม์ไลน์เต็ม (ชั่งน้ำหนักเริ่มต้น → Shipment → Center → Gate ทุกจุด → ชั่งน้ำหนักสำเร็จ เรียงตามเวลาจริง) และสินค้าในเที่ยวนั้น เวลาที่ใช้ต่อ Gate (สีส้ม) = Running Time จากระบบต้นทาง เทียบกับค่าเฉลี่ยของ Gate นั้นทั้งระบบ ส่วนเส้นประคั่นระหว่างจุด = ช่องว่างก่อนเข้าจุดถัดไป</div>
       <table><thead><tr><th>#</th><th>Shipment</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th></tr></thead><tbody id="topTableBody"></tbody></table>
+    </div>
+    <div class="panel reveal"><h3>Top 10 Shipment ที่มีสินค้าหลากหลายที่สุด (SKU)</h3>
+      <div class="sub">เรียง Shipment ทั้งหมดตามจำนวนรายการสินค้า (SKU / Line Item) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูไทม์ไลน์เต็มและรายชื่อสินค้าทั้งหมดในเที่ยวนั้น</div>
+      <table><thead><tr><th>#</th><th>Shipment</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>SKU</th><th>น้ำหนัก (กก.)</th></tr></thead><tbody id="topSkuTableBody"></tbody></table>
     </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>เวลารวมทั้งเที่ยว &amp; จุดที่เสียเวลา (Bottleneck Analysis)</h2><p>Shipment ไหนใช้เวลารวมนานที่สุด และปัจจัยที่อาจเกี่ยวข้อง (จำนวนสินค้า/จำนวน Gate ที่ผ่าน) สัมพันธ์กันจริงหรือไม่</p></div></div>
@@ -1051,6 +1056,7 @@ function render(model){
     document.getElementById('alertBanner').innerHTML = `<div class="lead">No Data</div><h3>ไม่มีข้อมูลตามตัวกรองที่เลือก</h3><p>ลองล้างตัวกรองหรือเลือกเดือน/ประเภทรถ/Gate อื่น</p>`;
     document.getElementById('longestBox').innerHTML = `<div class="hc-icon">—</div><div><div class="hc-title">Longest Shipment</div><div class="hc-main">ไม่มีข้อมูล</div></div>`;
     document.getElementById('topTableBody').innerHTML = '';
+    document.getElementById('topSkuTableBody').innerHTML = '';
     document.getElementById('insightList').innerHTML = `<div class="insight"><div class="num">•</div><div class="body"><b>ไม่มีข้อมูล</b><p>ลองปรับตัวกรองด้านบน</p></div></div>`;
     return;
   }
@@ -1102,12 +1108,12 @@ function render(model){
   const vtStats = {};
   shipmentList.forEach(s=>{ if(s.span===null) return; const code = s.vehicleCode; if(!vtStats[code]) vtStats[code] = []; vtStats[code].push(s.span); });
   const vtRows = Object.entries(vtStats).map(([code,arr])=>({label:code, avg: arr.reduce((a,b)=>a+b,0)/arr.length, max: Math.max(...arr), count: arr.length})).sort((a,b)=>b.avg-a.avg);
-  renderBars('chTimeByVehicle', vtRows.map(r=>({label:`${r.label} (${r.count})`, fullLabel:r.label, value: r.avg, valueLabel: fmtMin(r.avg), color:`linear-gradient(90deg, ${NAVY}, ${NAVY3})`, tooltip:`<b>${r.label}</b><br>เฉลี่ย ${fmtMin(r.avg)} · สูงสุด ${fmtMin(r.max)} · ${r.count} เที่ยว`})), {});
+  renderBars('chTimeByVehicle', vtRows.map(r=>({label:`${r.label} (${r.count})`, fullLabel:r.label, value: r.avg, valueLabel: `${fmtMin(r.avg)}<span class="b-max">สูงสุด ${fmtMin(r.max)}</span>`, color:`linear-gradient(90deg, ${NAVY}, ${NAVY3})`, tooltip:`<b>${r.label}</b><br>เฉลี่ย ${fmtMin(r.avg)} · สูงสุด ${fmtMin(r.max)} · ${r.count} เที่ยว`})), {});
 
   const gateStats = {};
   gateVisits.forEach(v=>{ if(!gateStats[v.gate]) gateStats[v.gate] = []; gateStats[v.gate].push(v.minutes); });
   const gateRows = Object.entries(gateStats).map(([gate,arr])=>({label:gate, avg: arr.reduce((a,b)=>a+b,0)/arr.length, max: Math.max(...arr), count: arr.length})).sort((a,b)=>b.avg-a.avg).slice(0,10);
-  renderBars('chTimeByGate', gateRows.map(r=>({label:`Gate ${r.label} (${r.count})`, fullLabel:`Gate ${r.label}`, value:r.avg, valueLabel: fmtMin(r.avg), color:`linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`, tooltip:`<b>Gate ${r.label}</b><br>เฉลี่ย ${fmtMin(r.avg)} · สูงสุด ${fmtMin(r.max)} · ${r.count} ครั้ง`})), {});
+  renderBars('chTimeByGate', gateRows.map(r=>({label:`Gate ${r.label} (${r.count})`, fullLabel:`Gate ${r.label}`, value:r.avg, valueLabel: `${fmtMin(r.avg)}<span class="b-max">สูงสุด ${fmtMin(r.max)}</span>`, color:`linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`, tooltip:`<b>Gate ${r.label}</b><br>เฉลี่ย ${fmtMin(r.avg)} · สูงสุด ${fmtMin(r.max)} · ${r.count} ครั้ง`})), {});
   // ค่าเฉลี่ยเวลาที่ใช้ต่อ Gate (ทุก Gate ไม่ตัดเหลือ Top 10) ไว้ใช้เทียบในไทม์ไลน์รายเที่ยว
   const gateAvgMap = {};
   Object.entries(gateStats).forEach(([gate,arr])=>{ gateAvgMap[gate] = arr.reduce((a,b)=>a+b,0)/arr.length; });
@@ -1238,6 +1244,39 @@ function render(model){
       <td style="font-weight:600;color:var(--navy-800)"><span class="row-chevron">▸</span>${i+1}</td>
       <td>${r.id}</td><td>${typeBadge(r.jobtype)}</td><td>${statusBadge(r.status)}</td><td>${r.vehicleCode}</td>
       <td>${r.weight.toLocaleString(undefined,{maximumFractionDigits:1})}<div class="bar-mini"><i style="width:${(r.weight/maxW*100).toFixed(0)}%"></i></div></td><td>${r.lineCount}</td>
+    </tr>
+    <tr class="top-detail-row" data-sid-detail="${r.id}" style="display:none;">
+      <td colspan="7">
+        <div class="detail-grid">
+          <div class="detail-col">
+            <div class="detail-col-title">ไทม์ไลน์ทั้งหมด (${shipGates.length} Gate)</div>
+            ${timeline.totalHtml}
+            ${timeline.rowsHtml}
+          </div>
+          <div class="detail-col">
+            <div class="detail-col-title">สินค้าในเที่ยวนี้ (${shipLines.length} รายการ)</div>
+            ${matRowsHtml}
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // ---- Top 10 Shipment with the most distinct SKU / line items ----
+  const top10Sku = shipmentList.slice().sort((a,b)=>b.lineCount-a.lineCount).slice(0,10);
+  const maxSku = Math.max(...top10Sku.map(r=>r.lineCount),1);
+  document.getElementById('topSkuTableBody').innerHTML = top10Sku.map((r,i)=>{
+    const shipLines = linesByShipment.get(r.id) || [];
+    const shipGates = gatesByShipment.get(r.id) || []; // เรียงตามเวลาเข้าจริง (checkIn) จากก่อนไปหลังแล้ว
+    const timeline = buildTimelineHtml(r, shipGates, gateAvgMap);
+    const matRowsHtml = shipLines.length
+      ? shipLines.map(l=>`<div class="detail-mat-row"><span class="detail-mat-name" title="${(l.materialDesc||'').replace(/"/g,'&quot;')}">${l.materialDesc || '(ไม่ระบุ)'}</span><span class="detail-mat-weight">${l.weight.toLocaleString(undefined,{maximumFractionDigits:0})} กก.</span></div>`).join('')
+      : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูลสินค้า</div>`;
+    return `
+    <tr class="top-row" data-sid="${r.id}">
+      <td style="font-weight:600;color:var(--navy-800)"><span class="row-chevron">▸</span>${i+1}</td>
+      <td>${r.id}</td><td>${typeBadge(r.jobtype)}</td><td>${statusBadge(r.status)}</td><td>${r.vehicleCode}</td>
+      <td>${r.lineCount}<div class="bar-mini"><i style="width:${(r.lineCount/maxSku*100).toFixed(0)}%"></i></div></td><td>${r.weight.toLocaleString(undefined,{maximumFractionDigits:1})}</td>
     </tr>
     <tr class="top-detail-row" data-sid-detail="${r.id}" style="display:none;">
       <td colspan="7">
@@ -1649,6 +1688,7 @@ function setupRowExpand(containerId, rowClass, detailClass){
   });
 }
 setupRowExpand('topTableBody', 'top-row', 'top-detail-row');
+setupRowExpand('topSkuTableBody', 'top-row', 'top-detail-row');
 setupRowExpand('timeCompareTable', 'tt-row', 'tt-detail-row');
 
 // Keep the sticky filter bar pinned exactly below the topbar (measured, not
