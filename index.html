@@ -278,7 +278,7 @@
   .bar-row .b-track{flex:1; height:15px; background:var(--grey-100); border-radius:8px; overflow:hidden;}
   .bar-row .b-fill{height:100%; width:0; border-radius:8px; cursor:pointer; transition:width 1s cubic-bezier(.2,.8,.2,1), filter .2s ease; background:linear-gradient(90deg,var(--navy-700),var(--navy-500));}
   .bar-row .b-fill:hover{filter:brightness(1.12);}
-  .bar-row .b-val{width:150px; flex-shrink:0; font-size:11.5px; font-weight:600; color:var(--navy-900); white-space:nowrap; text-align:right;}
+  .bar-row .b-val{width:150px; flex-shrink:0; font-size:11.5px; font-weight:600; color:var(--navy-900); white-space:nowrap; text-align:right; overflow:hidden; text-overflow:ellipsis;}
   .b-val .b-max{display:block; font-size:10px; font-weight:400; color:var(--grey-500); margin-top:1px;}
 
   .empty-note{color:var(--grey-400); font-size:12.5px; font-weight:300; text-align:center; padding:40px 10px;}
@@ -1783,16 +1783,18 @@ function render(model){
     if(!issueByVehicle.has(v)) issueByVehicle.set(v, {total:0, issue:0});
     const rec = issueByVehicle.get(v); rec.total += 1; if(hasIssue) rec.issue += 1;
   });
+  // หมายเหตุ: ตัวเลขบนแท่งใส่แค่ % (สั้น กันทับกับกรอบขวาที่กว้างคงที่ 150px) ส่วนจำนวนจริง
+  // (X/Y เที่ยว) ย้ายไปโชว์ตอน hover แทน — ป้องกันปัญหาข้อความยาวล้นกรอบเวลาตัวเลขเยอะขึ้น
   const gateIssueItems = Array.from(issueByGate.entries())
     .map(([g,r])=>({label:'Gate '+g, rate: r.total>0 ? r.issue/r.total*100 : 0, count:r.issue, total:r.total}))
     .sort((a,b)=>b.rate-a.rate)
-    .map(x=>({label:x.label, value:x.rate, valueLabel:`${x.rate.toFixed(1)}% (${x.count.toLocaleString()}/${x.total.toLocaleString()})`, color:'var(--orange-500)'}));
+    .map(x=>({label:x.label, value:x.rate, valueLabel:`${x.rate.toFixed(1)}%`, tooltip:`<b>${x.label}</b><br>${x.rate.toFixed(1)}% มีปัญหา (${x.count.toLocaleString()} จาก ${x.total.toLocaleString()} เที่ยว)`, color:'var(--orange-500)'}));
   renderBars('chIssueByGate', gateIssueItems, {labelWidth:110, unit:'%'});
 
   const vehicleIssueItems = Array.from(issueByVehicle.entries())
     .map(([v,r])=>({label:v, rate: r.total>0 ? r.issue/r.total*100 : 0, count:r.issue, total:r.total}))
     .sort((a,b)=>b.rate-a.rate)
-    .map(x=>({label:x.label, value:x.rate, valueLabel:`${x.rate.toFixed(1)}% (${x.count.toLocaleString()}/${x.total.toLocaleString()})`, color:'var(--navy-700)'}));
+    .map(x=>({label:x.label, value:x.rate, valueLabel:`${x.rate.toFixed(1)}%`, tooltip:`<b>${x.label}</b><br>${x.rate.toFixed(1)}% มีปัญหา (${x.count.toLocaleString()} จาก ${x.total.toLocaleString()} เที่ยว)`, color:'var(--navy-700)'}));
   renderBars('chIssueByVehicle', vehicleIssueItems, {labelWidth:110, unit:'%'});
 
   // ---- Daily trend: shipment count and total weight per calendar day ----
@@ -1813,8 +1815,11 @@ function render(model){
   };
   const dailyCountPoints = dailyKeys.map((k,i)=>({x: compactDayLabel(k,i), tooltipLabel: dayLabel(k), y: dailyMap.get(k).count}));
   const dailyWeightPoints = dailyKeys.map((k,i)=>({x: compactDayLabel(k,i), tooltipLabel: dayLabel(k), y: dailyMap.get(k).weight/1000}));
-  renderLineChart('chDailyCount', dailyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxLabels: 999});
-  renderLineChart('chDailyWeight', dailyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxLabels: 999});
+  // maxLabels สูง = โชว์ป้ายแกน X ครบทุกวัน (ตามที่ขอ) แต่ maxValueLabels แยกไว้ต่ำกว่า
+  // (คุมความถี่ของ "ตัวเลขค่ากำกับ" ที่กินพื้นที่แนวนอนมากกว่าป้ายวันที่แบบย่อ) กันตัวเลข
+  // ทับกันเวลามีข้อมูลหลายสิบวัน โดยเฉพาะกราฟน้ำหนักที่ค่ามีทศนิยม+ลูกน้ำ (เช่น "3,202.4")
+  renderLineChart('chDailyCount', dailyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxLabels: 999, maxValueLabels: 12});
+  renderLineChart('chDailyWeight', dailyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxLabels: 999, maxValueLabels: 10});
 
   // ---- แนวโน้มรายสัปดาห์ (Weekly Trend) — จัดกลุ่มวันในสัปดาห์เดียวกัน (เริ่มจันทร์) เข้าด้วยกัน ----
   // key ของแต่ละสัปดาห์ = วันจันทร์ของสัปดาห์นั้น (YYYY-MM-DD) เพื่อเรียงลำดับเวลาได้ตรงและไม่ชนกัน
@@ -1842,8 +1847,10 @@ function render(model){
   };
   const weeklyCountPoints = weeklyKeys.map(wk=>({x: weekRangeLabel(wk), y: weeklyMap.get(wk).count}));
   const weeklyWeightPoints = weeklyKeys.map(wk=>({x: weekRangeLabel(wk), y: weeklyMap.get(wk).weight/1000}));
-  renderLineChart('chWeeklyCount', weeklyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxLabels: 999});
-  renderLineChart('chWeeklyWeight', weeklyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxLabels: 999});
+  // ไม่บังคับ maxLabels สูงแบบรายวัน เพราะป้ายสัปดาห์เป็นช่วงวันที่ (ยาวกว่าเลขวันเดี่ยวๆ มาก)
+  // ถ้ามีข้อมูลสะสมหลายสิบสัปดาห์แล้วโชว์ครบทุกจุดจะทับกันอ่านไม่ออก ปล่อยให้ auto-thin (~12 ป้าย) แทน
+  renderLineChart('chWeeklyCount', weeklyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString()});
+  renderLineChart('chWeeklyWeight', weeklyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})});
 
   // ---- แนวโน้มรายเดือน (Monthly Trend) — ใช้ s.month ("YYYY-MM") ที่ buildModel แยกไว้แล้ว ----
   const monthlyMap = new Map(); // "YYYY-MM" -> {count, weight}
@@ -1859,8 +1866,9 @@ function render(model){
   };
   const monthlyCountPoints = monthlyKeys.map(k=>({x: monthCompactLabel(k), tooltipLabel: monthLabel(k), y: monthlyMap.get(k).count}));
   const monthlyWeightPoints = monthlyKeys.map(k=>({x: monthCompactLabel(k), tooltipLabel: monthLabel(k), y: monthlyMap.get(k).weight/1000}));
-  renderLineChart('chMonthlyCount', monthlyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxLabels: 999});
-  renderLineChart('chMonthlyWeight', monthlyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxLabels: 999});
+  // เดือนสั้นพอ ("ก.ค. 69") ทนได้มากกว่ารายสัปดาห์ แต่ก็ปล่อย auto-thin เหมือนกันเผื่อสะสมข้ามปี
+  renderLineChart('chMonthlyCount', monthlyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString()});
+  renderLineChart('chMonthlyWeight', monthlyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})});
 
   // ---- Customer Pareto (80/20) + one-time-customer stat ----
   const custMap = new Map(); // ชื่อลูกค้าที่ตัดคำนำหน้าแล้ว -> {count, weight}
@@ -1944,7 +1952,8 @@ function render(model){
     const c = returnCustMap.get(name); c.count += 1; c.weight += s.weight;
   });
   const returnCustRows = Array.from(returnCustMap.entries()).map(([name,v])=>({name, ...v})).sort((a,b)=>b.count-a.count).slice(0,10);
-  renderBars('chReturnCustomer', returnCustRows.map(r=>({label:r.name, value:r.count, valueLabel:`${r.count.toLocaleString()} เที่ยว (${fmtNum(r.weight/1000,1)} ตัน)`, color:`linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`})), {labelWidth:220});
+  // ตัวเลขบนแท่งใส่แค่จำนวนเที่ยว (สั้น กันล้นกรอบ 150px) น้ำหนักเต็มดูตอน hover แทน
+  renderBars('chReturnCustomer', returnCustRows.map(r=>({label:r.name, value:r.count, valueLabel:`${r.count.toLocaleString()} เที่ยว`, tooltip:`<b>${r.name}</b><br>${r.count.toLocaleString()} เที่ยว · น้ำหนักรวม ${fmtNum(r.weight/1000,1)} ตัน`, color:`linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`})), {labelWidth:220});
 
   const returnMatMap = new Map();
   lines.forEach(l=>{
@@ -1953,7 +1962,7 @@ function render(model){
     const m = returnMatMap.get(l.materialDesc); m.weight += l.weight; m.ships.add(l.shipment);
   });
   const returnMatRows = Array.from(returnMatMap.entries()).map(([label,v])=>({label, value:v.weight, ships:v.ships.size})).sort((a,b)=>b.value-a.value).slice(0,10);
-  renderBars('chReturnMaterial', returnMatRows.map(r=>({label:r.label, value:r.value, valueLabel:`${fmtNum(r.value/1000,2)} ตัน (${r.ships.toLocaleString()} เที่ยว)`, color:`linear-gradient(90deg, ${NAVY3}, ${NAVY})`})), {labelWidth:220, labelLines:2});
+  renderBars('chReturnMaterial', returnMatRows.map(r=>({label:r.label, value:r.value, valueLabel:`${fmtNum(r.value/1000,2)} ตัน`, tooltip:`<b>${r.label}</b><br>${fmtNum(r.value/1000,2)} ตัน · ${r.ships.toLocaleString()} เที่ยว`, color:`linear-gradient(90deg, ${NAVY3}, ${NAVY})`})), {labelWidth:220, labelLines:2});
 
   // ---- Top Ship-To destinations (ทุก Shipment/รายการสินค้า ไม่ใช่แค่ multi-destination) ----
   const destMap2 = new Map(); // ชื่อปลายทาง (ตัดคำแล้ว) -> {ships:Set, weight}
@@ -1964,7 +1973,7 @@ function render(model){
     const d = destMap2.get(name); d.ships.add(l.shipment); d.weight += l.weight;
   });
   const destRows2 = Array.from(destMap2.entries()).map(([name,v])=>({name, count:v.ships.size, weight:v.weight})).sort((a,b)=>b.count-a.count).slice(0,10);
-  renderBars('chTopShipTo', destRows2.map(r=>({label:r.name, value:r.count, valueLabel:`${r.count.toLocaleString()} เที่ยว (${fmtNum(r.weight/1000,1)} ตัน)`, color:`linear-gradient(90deg, ${NAVY3}, ${ORANGE})`})), {labelWidth:260});
+  renderBars('chTopShipTo', destRows2.map(r=>({label:r.name, value:r.count, valueLabel:`${r.count.toLocaleString()} เที่ยว`, tooltip:`<b>${r.name}</b><br>${r.count.toLocaleString()} เที่ยว · น้ำหนักรวม ${fmtNum(r.weight/1000,1)} ตัน`, color:`linear-gradient(90deg, ${NAVY3}, ${ORANGE})`})), {labelWidth:260});
 
   // ---- Weight distribution histogram ----
   const wBuckets = [
@@ -2012,9 +2021,10 @@ function render(model){
     const label = dowLabels[(jsDow+6)%7]; // เรียงจันทร์เป็นตัวแรก
     const rec = dowMap.get(label); rec.count += 1; rec.weight += s.weight;
   });
+  const dowFullName = {'จ':'วันจันทร์','อ':'วันอังคาร','พ':'วันพุธ','พฤ':'วันพฤหัสบดี','ศ':'วันศุกร์','ส':'วันเสาร์','อา':'วันอาทิตย์'};
   renderBars('chDowTrend', dowLabels.map(l=>{
     const r = dowMap.get(l);
-    return {label:l, value:r.count, valueLabel:`${r.count.toLocaleString()} เที่ยว (${fmtNum(r.weight/1000,1)} ตัน)`, color:`linear-gradient(90deg, ${NAVY3}, ${ORANGE})`};
+    return {label:l, value:r.count, valueLabel:`${r.count.toLocaleString()} เที่ยว`, tooltip:`<b>${dowFullName[l]}</b><br>${r.count.toLocaleString()} เที่ยว · น้ำหนักรวม ${fmtNum(r.weight/1000,1)} ตัน`, color:`linear-gradient(90deg, ${NAVY3}, ${ORANGE})`};
   }), {labelWidth:60});
 
   // ---- Insights (dynamic) ----
