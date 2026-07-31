@@ -407,8 +407,8 @@
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>ช่วงเวลาที่รถหนาแน่นที่สุด</h2><p>จำนวน Shipment แยกตามชั่วโมงที่เข้า Gate ครั้งแรก และชั่วโมงที่ออกจาก Gate สุดท้าย</p></div></div>
     <div class="grid-2 reveal">
-      <div class="panel"><h3>จำนวนเที่ยวรถตามช่วงเวลา (เข้า)</h3><div class="sub" id="chHourlySub">ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment · แสดงครบ 24 ชั่วโมงเพื่อเทียบกับกราฟฝั่งขวา</div><div class="chart-box tall" id="chHourly"></div></div>
-      <div class="panel"><h3>จำนวนเที่ยวรถตามช่วงเวลา (ออก)</h3><div class="sub" id="chHourlyOutSub">ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment · แสดงครบ 24 ชั่วโมงเพื่อเทียบกับกราฟฝั่งซ้าย</div><div class="chart-box tall" id="chHourlyOut"></div></div>
+      <div class="panel"><h3>จำนวนเที่ยวรถตามช่วงเวลา (เข้า)</h3><div class="sub" id="chHourlySub">ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment (แสดงเฉพาะชั่วโมงที่มีข้อมูล)</div><div class="chart-box tall" id="chHourly"></div></div>
+      <div class="panel"><h3>จำนวนเที่ยวรถตามช่วงเวลา (ออก)</h3><div class="sub" id="chHourlyOutSub">ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment (แสดงเฉพาะชั่วโมงที่มีข้อมูล)</div><div class="chart-box tall" id="chHourlyOut"></div></div>
     </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>การใช้งานยานพาหนะ (Fleet Utilization)</h2><p>จัดกลุ่มตามตาราง Type: TL / 10W / 12W / 6W / 4W / Pickup / พ่วงแม่-ลูก</p></div></div>
@@ -430,9 +430,10 @@
       <div id="paretoTable"></div>
     </div>
 
-    <div class="section-head reveal"><div><h2><span class="bar"></span>สินค้าที่มักขึ้นด้วยกันบ่อยๆ &amp; Shipment หนักสุด</h2><p>คู่ Product Group และคู่ Material Desc ที่ปรากฏร่วมกันบ่อยที่สุด และ 10 อันดับ Shipment น้ำหนักสูงสุด</p></div></div>
+    <div class="section-head reveal"><div><h2><span class="bar"></span>สินค้าที่มักขึ้นด้วยกันบ่อยๆ &amp; Shipment หนักสุด</h2><p>คู่ Product Group, คู่ Material Desc และคู่ Gate ที่ปรากฏ/ผ่านร่วมกันบ่อยที่สุด และ 10 อันดับ Shipment น้ำหนักสูงสุด</p></div></div>
     <div class="panel reveal"><h3>คู่สินค้าที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองกลุ่มร่วมกัน (Product Group)</div><div class="chart-box tall" id="chCooccur"></div></div>
     <div class="panel reveal"><h3>คู่ Material Desc ที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองรายการนี้ร่วมกัน — เรียงจากบ่อยที่สุด</div><div id="chMaterialCooccur"></div></div>
+    <div class="panel reveal"><h3>คู่ Gate ที่ผ่านร่วมกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่ผ่านทั้งสอง Gate นี้ร่วมกัน (ไม่สนลำดับก่อน-หลัง) — เรียงจากบ่อยที่สุด</div><div class="chart-box tall" id="chGateCooccur"></div></div>
     <div class="panel reveal"><h3>Top 10 Shipment น้ำหนักสูงสุด</h3>
       <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูไทม์ไลน์เต็ม (ชั่งน้ำหนักเริ่มต้น → Shipment → Center → Gate ทุกจุด → ชั่งน้ำหนักสำเร็จ เรียงตามเวลาจริง) และสินค้าในเที่ยวนั้น เวลาที่ใช้ต่อ Gate (สีส้ม) = Running Time จากระบบต้นทาง เทียบกับค่าเฉลี่ยของ Gate นั้นทั้งระบบ ส่วนเส้นประคั่นระหว่างจุด = ช่องว่างก่อนเข้าจุดถัดไป</div>
       <table><thead><tr><th>#</th><th>Shipment</th><th>ลูกค้า</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th></tr></thead><tbody id="topTableBody"></tbody></table>
@@ -1289,11 +1290,11 @@ function render(model){
 
   if(!totalShipments){
     document.getElementById('kpiGrid').innerHTML = `<div class="empty-note" style="grid-column:1/-1;">ไม่มี Shipment ตรงกับตัวกรองที่เลือก</div>`;
-    ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chHourlyOut','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCooccur','chMaterialCooccur','chReturnCustomer','chReturnMaterial','chTopShipTo','chWeightHist','chDowTrend','chDailyCount','chDailyWeight','chWeeklyCount','chWeeklyWeight','chMonthlyCount','chMonthlyWeight'].forEach(id=>emptyState(id));
+    ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chHourlyOut','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCooccur','chMaterialCooccur','chGateCooccur','chReturnCustomer','chReturnMaterial','chTopShipTo','chWeightHist','chDowTrend','chDailyCount','chDailyWeight','chWeeklyCount','chWeeklyWeight','chMonthlyCount','chMonthlyWeight'].forEach(id=>emptyState(id));
     document.getElementById('legJobType').innerHTML=''; document.getElementById('legStatus').innerHTML=''; document.getElementById('legVehicleShare').innerHTML='';
     document.getElementById('chIssueSub').textContent = 'จำนวนเที่ยวรถที่มีหมายเหตุปัญหา แยกตามประเภท';
-    document.getElementById('chHourlySub').textContent = 'ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment';
-    document.getElementById('chHourlyOutSub').textContent = 'ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment';
+    document.getElementById('chHourlySub').textContent = 'ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment (แสดงเฉพาะชั่วโมงที่มีข้อมูล)';
+    document.getElementById('chHourlyOutSub').textContent = 'ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment (แสดงเฉพาะชั่วโมงที่มีข้อมูล)';
     document.getElementById('alertBanner').innerHTML = `<div class="lead">No Data</div><h3>ไม่มีข้อมูลตามตัวกรองที่เลือก</h3><p>ลองล้างตัวกรองหรือเลือกเดือน/ประเภทรถ/Gate อื่น</p>`;
     document.getElementById('topTableBody').innerHTML = '';
     document.getElementById('topSkuTableBody').innerHTML = '';
@@ -1385,7 +1386,8 @@ function render(model){
   const hourCounts = {}; let totalIn = 0;
   shipmentList.forEach(s=>{ if(s.firstIn===null) return; const h = Math.floor(s.firstIn/60); hourCounts[h] = (hourCounts[h]||0)+1; totalIn++; });
   const hourRows = Array.from({length:24}, (_,h)=>({h, c: hourCounts[h]||0}));
-  renderBars('chHourly', hourRows.map(r=>({
+  // แสดงเฉพาะชั่วโมงที่มีข้อมูลจริง (c > 0) — ไม่โชว์ชั่วโมงที่ไม่มีรถเข้าเลยเพื่อไม่ให้กราฟยาวเกินจำเป็น
+  renderBars('chHourly', hourRows.filter(r=>r.c>0).map(r=>({
     label:`${String(r.h).padStart(2,'0')}:00`, value:r.c,
     valueLabel: `${r.c.toLocaleString()} (${fmtPct(r.c,totalIn)})`,
     color: `linear-gradient(90deg, ${NAVY2}, ${NAVY3})`,
@@ -1393,14 +1395,14 @@ function render(model){
   })), {unit:'เที่ยว'});
   const peakIn = hourRows.reduce((best,r)=> r.c>best.c ? r : best, hourRows[0]);
   document.getElementById('chHourlySub').innerHTML = totalIn
-    ? `ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment · แสดงครบ 24 ชั่วโมงเพื่อเทียบกับกราฟฝั่งขวา<br><span class="peak-note">🔺 ช่วงเวลาที่รถเข้ามากที่สุด: <b>${String(peakIn.h).padStart(2,'0')}:00 น.</b> (${peakIn.c.toLocaleString()} เที่ยว · ${fmtPct(peakIn.c,totalIn)})</span>`
+    ? `ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment (แสดงเฉพาะชั่วโมงที่มีข้อมูล)<br><span class="peak-note">🔺 ช่วงเวลาที่รถเข้ามากที่สุด: <b>${String(peakIn.h).padStart(2,'0')}:00 น.</b> (${peakIn.c.toLocaleString()} เที่ยว · ${fmtPct(peakIn.c,totalIn)})</span>`
     : 'ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment';
 
   // ---- ชั่วโมงที่รถ "ออก" จาก Gate สุดท้ายมากที่สุด (คู่กับกราฟ "เข้า" ด้านบน) ----
   const hourOutCounts = {}; let totalOut = 0;
   shipmentList.forEach(s=>{ if(s.lastOut===null) return; const h = Math.floor(s.lastOut/60); hourOutCounts[h] = (hourOutCounts[h]||0)+1; totalOut++; });
   const hourOutRows = Array.from({length:24}, (_,h)=>({h, c: hourOutCounts[h]||0}));
-  renderBars('chHourlyOut', hourOutRows.map(r=>({
+  renderBars('chHourlyOut', hourOutRows.filter(r=>r.c>0).map(r=>({
     label:`${String(r.h).padStart(2,'0')}:00`, value:r.c,
     valueLabel: `${r.c.toLocaleString()} (${fmtPct(r.c,totalOut)})`,
     color: `linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`,
@@ -1408,7 +1410,7 @@ function render(model){
   })), {unit:'เที่ยว'});
   const peakOut = hourOutRows.reduce((best,r)=> r.c>best.c ? r : best, hourOutRows[0]);
   document.getElementById('chHourlyOutSub').innerHTML = totalOut
-    ? `ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment · แสดงครบ 24 ชั่วโมงเพื่อเทียบกับกราฟฝั่งซ้าย<br><span class="peak-note">🔺 ช่วงเวลาที่รถออกมากที่สุด: <b>${String(peakOut.h).padStart(2,'0')}:00 น.</b> (${peakOut.c.toLocaleString()} เที่ยว · ${fmtPct(peakOut.c,totalOut)})</span>`
+    ? `ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment (แสดงเฉพาะชั่วโมงที่มีข้อมูล)<br><span class="peak-note">🔺 ช่วงเวลาที่รถออกมากที่สุด: <b>${String(peakOut.h).padStart(2,'0')}:00 น.</b> (${peakOut.c.toLocaleString()} เที่ยว · ${fmtPct(peakOut.c,totalOut)})</span>`
     : 'ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment';
 
   const vehicleAgg = {};
@@ -1529,6 +1531,29 @@ function render(model){
     const [a,b] = matPairLabels[key];
     return {a, b, value, valueLabel:value.toLocaleString()+' เที่ยว ('+fmtPct(value,matPairShipmentTotal)+')'};
   }));
+
+  // ---- Gate co-occurrence: คู่ Gate ที่ "เที่ยวเดียวกัน" แวะผ่านทั้งสองจุดบ่อยที่สุด
+  // (ไม่สนลำดับก่อน-หลัง ใช้ s.gateList ที่มีอยู่แล้วต่อ Shipment ไม่ต้องไล่จาก lines ใหม่) ----
+  const gatePairCounts = {};
+  let gatePairShipmentTotal = 0;
+  shipmentList.forEach(s=>{
+    const arr = s.gateList;
+    if(!arr || !arr.length) return;
+    gatePairShipmentTotal++;
+    if(arr.length < 2) return;
+    for(let i=0;i<arr.length;i++) for(let j=i+1;j<arr.length;j++){ const key = [arr[i],arr[j]].sort().join(' + '); gatePairCounts[key] = (gatePairCounts[key]||0)+1; }
+  });
+  const gatePairRows = Object.entries(gatePairCounts).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  if(gatePairRows.length){
+    renderBars('chGateCooccur', gatePairRows.map(([label,value])=>({
+      label:'Gate '+label, value,
+      valueLabel: value.toLocaleString()+' เที่ยว ('+fmtPct(value,gatePairShipmentTotal)+')',
+      color:`linear-gradient(90deg, ${NAVY2}, ${NAVY3})`,
+      tooltip:`<b>Gate ${label}</b><br>${value.toLocaleString()} เที่ยว (${fmtPct(value,gatePairShipmentTotal)} ของเที่ยวที่ผ่าน Gate)`
+    })), {unit:'เที่ยว', labelWidth:210});
+  } else {
+    emptyState('chGateCooccur', 'ไม่พบเที่ยวที่ผ่าน 2 Gate ขึ้นไปตามตัวกรองนี้');
+  }
 
   // ---- Top 10 heaviest table (click a row to expand: gates + materials) ----
   const top10 = shipmentList.slice().sort((a,b)=>b.weight-a.weight).slice(0,10);
