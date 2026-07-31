@@ -314,7 +314,7 @@
     <div class="section-head reveal"><div><h2><span class="bar"></span>เวลาที่ใช้ต่อประเภทรถ และ ต่อ Gate</h2><p>Running Time = Gate Check out − Gate Check in (นาที) เฉลี่ยและสูงสุด</p></div></div>
     <div class="grid-2 reveal">
       <div class="panel"><h3>เวลาเฉลี่ย/สูงสุด ต่อประเภทรถ</h3><div class="sub">คำนวณจากช่วงเวลารวมของแต่ละ Shipment (Gate แรกถึง Gate สุดท้าย)</div><div class="chart-box tall" id="chTimeByVehicle"></div></div>
-      <div class="panel"><h3>เวลาเฉลี่ย/สูงสุด ต่อ Gate</h3><div class="sub">คำนวณจากทุกครั้งที่มีการผ่านแต่ละ Gate</div><div class="chart-box tall" id="chTimeByGate"></div></div>
+      <div class="panel"><h3>เวลาเฉลี่ย/สูงสุด ต่อ Gate</h3><div class="sub">ใช้ค่า "Running Time (mm)" ที่ระบบต้นทางคำนวณไว้แล้วต่อการเข้า Gate แต่ละครั้ง (ตรวจสอบแล้วว่าตรงกับ Gate Check out − Check in) ไม่ใช่ค่าที่คำนวณเอง</div><div class="chart-box tall" id="chTimeByGate"></div></div>
     </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>ช่วงเวลาที่รถหนาแน่นที่สุด</h2><p>จำนวน Shipment แยกตามชั่วโมงที่เข้า Gate ครั้งแรก</p></div></div>
@@ -346,7 +346,7 @@
     <div class="panel reveal"><h3>คู่สินค้าที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองกลุ่มร่วมกัน (Product Group)</div><div class="chart-box tall" id="chCooccur"></div></div>
     <div class="panel reveal"><h3>คู่ Material Desc ที่ขึ้นด้วยกันบ่อยที่สุด (Top 12)</h3><div class="sub">นับจำนวน Shipment ที่มีสินค้าทั้งสองรายการนี้ร่วมกัน — เรียงจากบ่อยที่สุด</div><div id="chMaterialCooccur"></div></div>
     <div class="panel reveal"><h3>Top 10 Shipment น้ำหนักสูงสุด</h3>
-      <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูรายละเอียด Gate ที่ผ่าน (เรียงตามเวลาเข้าจริง ก่อน-หลัง) และสินค้าในเที่ยวนั้น</div>
+      <div class="sub">เรียง Shipment ทั้งหมดตามน้ำหนักรวม (Weight) จากมากไปน้อย แสดง 10 อันดับแรก — คลิกที่แถวเพื่อดูรายละเอียด Gate ที่ผ่าน (เรียงตามเวลาเข้าจริง ก่อน-หลัง) และสินค้าในเที่ยวนั้น เวลาที่ใช้ต่อ Gate อ้างอิงจากค่า Running Time ของระบบต้นทาง ส่วนเวลา "รอ" เป็นค่าวัดคิวแยกต่างหาก อาจไม่สอดคล้องกับช่วงเวลาระหว่าง Gate ที่เห็น</div>
       <table><thead><tr><th>#</th><th>Shipment</th><th>ประเภท</th><th>สถานะ</th><th>รถ</th><th>น้ำหนัก (กก.)</th><th>SKU</th></tr></thead><tbody id="topTableBody"></tbody></table>
     </div>
 
@@ -354,7 +354,7 @@
     <div class="kpi-grid reveal" id="kpiBottleneck"></div>
     <div class="panel reveal">
       <h3>Top 10 Shipment ที่ใช้เวลารวมนานที่สุด</h3>
-      <div class="sub">เวลารวม = เวลาตั้งแต่เข้า Gate แรกจนออก Gate สุดท้าย (นาที) — แสดงคู่กับจำนวนรายการสินค้า (SKU) และจำนวน Gate ที่ผ่านในเที่ยวนั้น เพื่อดูว่าเวลาที่มากขึ้นสอดคล้องกับ SKU/Gate ที่มากขึ้นหรือไม่ · คลิกที่แถวเพื่อดูลำดับ Gate ที่ผ่าน เรียงตามเวลาเข้าจริง ก่อน-หลัง</div>
+      <div class="sub">เวลารวม = เวลาตั้งแต่เข้า Gate แรกจนออก Gate สุดท้าย (นาที) — แสดงคู่กับจำนวนรายการสินค้า (SKU) และจำนวน Gate ที่ผ่านในเที่ยวนั้น เพื่อดูว่าเวลาที่มากขึ้นสอดคล้องกับ SKU/Gate ที่มากขึ้นหรือไม่ · คลิกที่แถวเพื่อดูลำดับ Gate ที่ผ่าน เรียงตามเวลาเข้าจริง ก่อน-หลัง (เวลาที่ใช้ต่อ Gate = Running Time จากระบบต้นทาง, เวลา "รอ" เป็นค่าวัดคิวแยกต่างหาก)</div>
       <div id="timeCompareTable"></div>
     </div>
     <div class="panel reveal">
@@ -362,7 +362,7 @@
       <div class="sub">ค่าสหสัมพันธ์ (Pearson correlation, r) ระหว่างเวลารวมต่อเที่ยว กับจำนวนรายการสินค้า และจำนวน Gate ที่ผ่าน — คำนวณจาก Shipment ทุกเที่ยวที่มีข้อมูลเวลาครบตามตัวกรองปัจจุบัน ค่า r เข้าใกล้ 1 หรือ -1 คือสัมพันธ์กันมาก เข้าใกล้ 0 คือแทบไม่สัมพันธ์กัน</div>
       <div id="corrCards" class="kpi-grid" style="grid-template-columns:repeat(2,1fr);"></div>
     </div>
-    <div class="panel reveal"><h3>จุดที่เสียเวลามากที่สุดในกระบวนการ (เฉลี่ยต่อเที่ยว)</h3><div class="sub">ใช้ค่า Lost Time ที่ระบบต้นทางคำนวณไว้แล้วโดยตรง (ไม่ได้คำนวณซ้ำ): รอเข้า Gate เฉลี่ยต่อครั้ง / Shipment Start−Weight Start / Center Process−Shipment Start (นาที)</div><div class="chart-box tall" id="chLostTimeStage"></div></div>
+    <div class="panel reveal"><h3>จุดที่เสียเวลามากที่สุดในกระบวนการ (เฉลี่ยต่อเที่ยว)</h3><div class="sub">ใช้ค่า Lost Time ที่ระบบต้นทางคำนวณไว้แล้วโดยตรง (ไม่ได้คำนวณซ้ำ เพราะตรวจสอบสูตรย้อนกลับไม่สำเร็จ): รอเข้า Gate เฉลี่ยต่อครั้ง / Shipment Start−Weight Start / Center Process−Shipment Start (นาที) — ค่าเหล่านี้น่าจะมาจากการวัดคิวรถแยกต่างหาก ไม่ได้อิงจากช่วงเวลาระหว่าง Gate ที่แสดงในตาราง จึงอาจดูไม่สอดคล้องกับลำดับเวลาที่เห็น</div><div class="chart-box tall" id="chLostTimeStage"></div></div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>Funnel กระบวนการทำงาน (Process Funnel)</h2><p>ดูว่า Shipment หลุด/ค้างอยู่ที่ขั้นไหนมากที่สุด ตั้งแต่ชั่งน้ำหนักเริ่มต้นจนออก Gate</p></div></div>
     <div class="panel reveal"><h3>Shipment ผ่านแต่ละขั้นตอนกี่เที่ยว</h3><div class="sub">นับจำนวน Shipment ที่มีข้อมูลบันทึกไว้ในแต่ละสเตจ (Weight Start → Shipment Time → Center Time → Weight Success → Gate Check out) เทียบกับจำนวน Shipment ทั้งหมดตามตัวกรองปัจจุบัน — ขั้นไหนที่จำนวนหล่นเยอะ แปลว่าเที่ยวรถจำนวนมากไม่ถูกบันทึกข้อมูล ณ ขั้นนั้น ควรตรวจสอบกระบวนการหน้างาน</div><div id="chProcessFunnel"></div></div>
@@ -857,11 +857,12 @@ function buildModel(csvText){
     gateIn: col('Gate <br /> Check in'), gateOut: col('Gate <br /> Check out'), issue: col('Issue'),
     wStart: col('Weight <br /> Start'), shipTime: col('Shipment <br /> Time'), centerTime: col('Center <br /> Time'), wSuccess: col('Weight <br /> Success'),
     dWeight: col('Weight Success <br /> - <br /> Weight Start'), dShip: col('Weight Success <br /> - <br /> Shipment Start'), dCenter: col('Weight Success <br /> - <br /> Center'),
+    running: col('Running <br /> Time (mm)'), usedTime: col('Used <br /> Time (mm)'),
     ltGate: col('Lost Time <br /> เวลาที่รถรอเข้า <br /> Gate'), ltShip: col('Lost Time <br /> Shipment Start - <br /> Weight Start'), ltCenter: col('Lost Time <br /> Center Process - <br /> Shipment Start'),
   };
   const fallback = {shipment:0,jobtype:1,status:2,vehicle:4,soldTo:5,shipTo:6,productGroup:7,materialDesc:8,gate:9,weight:10,date:11,
     wStart:12,shipTime:13,centerTime:14,wSuccess:15,dWeight:16,dShip:17,dCenter:18,gateIn:19,gateOut:20,
-    ltGate:23,ltShip:24,ltCenter:25,issue:26};
+    running:21,usedTime:22,ltGate:23,ltShip:24,ltCenter:25,issue:26};
   Object.keys(idx).forEach(k=>{ if(idx[k] === -1) idx[k] = fallback[k]; });
 
   const dataRows = rows.slice(headerIdx+1).filter(r => r[idx.shipment] && r[idx.shipment].trim());
@@ -919,12 +920,20 @@ function buildModel(csvText){
         const key = sid+'|'+gate+'|'+inMin+'|'+outMin;
         if(!gateVisitSet.has(key)){
           gateVisitSet.add(key);
-          let dur = outMin - inMin; if(dur < 0) dur += 1440;
-          // เวลารอเข้า Gate ที่คำนวณมาจากระบบโดยตรง (ไม่ใช่ derive เอง)
+          // ใช้ค่า "Running Time (mm)" ที่ระบบต้นทางคำนวณไว้แล้วโดยตรงเป็นค่าหลัก
+          // (ตรวจสอบกับ Gate Check out - Check in แล้วตรงกัน 75.6% เป๊ะ และอีก ~24%
+          // คลาดเคลื่อนแค่ ±1 นาทีจากการปัดเศษวินาทีในชีตต้นทาง ไม่ใช่ผิดสูตร) --
+          // การใช้ค่าจากระบบตรงๆ จึงแม่นยำกว่าและตรงกับตัวเลขที่ผู้ใช้เห็นในชีตเอง
+          // คำนวณเอง (Check out - Check in) ไว้เป็น fallback เผื่อคอลัมน์นี้ว่าง
+          let dur = parseDuration(r[idx.running]);
+          if(dur === null){ dur = outMin - inMin; if(dur < 0) dur += 1440; }
+          // เวลารอเข้า Gate: ใช้ค่า Lost Time เวลาที่รถรอเข้า Gate จากระบบต้นทางตรงๆ
+          // (ทดสอบแล้วว่าไม่สามารถ derive จากช่องว่างระหว่าง Gate ก่อนหน้ากับ Gate นี้ได้
+          // ค่านี้น่าจะมาจากการติดตามคิวรถแยกต่างหาก ไม่ผูกกับลำดับ Gate ที่แสดงในตาราง)
           const waitMin = parseDuration(r[idx.ltGate]);
           // เก็บเวลาเข้า Gate จริง (นาทีของวัน, 0-1439) ไว้ด้วย เพื่อใช้เรียงลำดับว่า
           // เข้า Gate ไหนก่อน-หลัง ตามเวลาจริง แทนการยึดลำดับแถวในชีต
-          if(dur >= 0 && dur < 600) gateVisits.push({shipment:sid, gate, minutes:dur, waitMinutes: waitMin, checkIn: inMin});
+          if(dur !== null && dur >= 0 && dur < 600) gateVisits.push({shipment:sid, gate, minutes:dur, waitMinutes: waitMin, checkIn: inMin});
         }
       }
     }
@@ -1188,7 +1197,7 @@ function render(model){
 
   document.getElementById('kpiBottleneck').innerHTML = `
     <div class="kpi reveal"><div class="top-row"><div class="icon">⏱️</div></div><div class="label">เวลารวมเฉลี่ยต่อเที่ยว</div><div class="value">${avgSpan!==null?fmtMin(avgSpan):'-'}</div><span class="delta info">Gate แรกถึง Gate สุดท้าย · ${spanShips.length} เที่ยวที่มีข้อมูลครบ</span></div>
-    <div class="kpi reveal"><div class="top-row"><div class="icon">🚪</div></div><div class="label">รอเข้า Gate เฉลี่ย</div><div class="value">${avgGateWait!==null?fmtMin(avgGateWait):'-'}</div><span class="delta info">เฉลี่ยต่อการเข้า Gate 1 ครั้ง (Lost Time จากระบบ)</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">🚪</div></div><div class="label">รอเข้า Gate เฉลี่ย</div><div class="value">${avgGateWait!==null?fmtMin(avgGateWait):'-'}</div><span class="delta info">ค่า Lost Time จากระบบต้นทางโดยตรง (วัดคิวรถแยกต่างหาก ไม่ผูกกับลำดับ Gate ที่แสดง)</span></div>
     <div class="kpi reveal"><div class="top-row"><div class="icon">⚖️</div></div><div class="label">Shipment Start − Weight Start</div><div class="value">${avgLt2!==null?fmtMin(avgLt2):'-'}</div><span class="delta info">Lost Time เฉลี่ยต่อเที่ยว (จากระบบ)</span></div>
     <div class="kpi reveal"><div class="top-row"><div class="icon">🏭</div></div><div class="label">Center Process − Shipment Start</div><div class="value">${avgLt3!==null?fmtMin(avgLt3):'-'}</div><span class="delta info">Lost Time เฉลี่ยต่อเที่ยว (จากระบบ)</span></div>
   `;
