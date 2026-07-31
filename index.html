@@ -193,10 +193,17 @@
   .gap-arrow{color:var(--grey-400); font-size:11px;}
   .timeline-total{font-size:12px; color:var(--navy-800); background:var(--navy-100); border-radius:8px; padding:8px 12px; margin-bottom:8px;}
   .timeline-total b{color:var(--navy-900);}
+  .timeline-note{font-size:11px; color:var(--orange-600); background:var(--orange-100); border-radius:8px; padding:6px 10px; margin:-4px 0 8px; line-height:1.5;}
   .stage-row{background:rgba(255,107,53,.04);}
   .stage-order{background:var(--orange-100); color:var(--orange-600);}
   .stage-time{color:var(--grey-600); font-weight:500;}
   .gate-avg-note{color:var(--grey-400); font-weight:400; font-size:10.5px; display:block; margin-top:1px;}
+
+  /* ---- Time-summary flags (Gate / Shipment concern level) ---- */
+  .flag-badge{display:inline-flex; align-items:center; gap:4px; padding:3px 9px; border-radius:100px; font-size:11px; font-weight:600; white-space:nowrap;}
+  .flag-red{background:var(--orange-100); color:var(--orange-600);}
+  .flag-yellow{background:#fff6e0; color:#a06a00;}
+  .flag-green{background:#e6f4ea; color:#1e7d3a;}
   .detail-gate-time{color:var(--orange-600); font-weight:600; white-space:nowrap;}
   .detail-mat-name{color:var(--grey-800); font-weight:300; flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .detail-mat-weight{color:var(--navy-800); font-weight:600; white-space:nowrap;}
@@ -378,6 +385,19 @@
       <div id="corrCards" class="kpi-grid" style="grid-template-columns:repeat(2,1fr);"></div>
     </div>
     <div class="panel reveal"><h3>จุดที่เสียเวลามากที่สุดในกระบวนการ (เฉลี่ยต่อเที่ยว)</h3><div class="sub">รอเข้า Gate = เฉลี่ยจากคอลัมน์ Lost Time เวลาที่รถรอเข้า Gate (ตรวจสอบแล้วว่าคือ "เวลาก่อนเข้า Gate ถัดไปหลังออกจาก Gate นี้" ตรงกับสูตรที่คำนวณเอง 93.1%) ส่วน Shipment Start−Weight Start / Center Process−Shipment Start ใช้ค่าที่ระบบต้นทางคำนวณไว้แล้วโดยตรง (ไม่ได้คำนวณซ้ำ เพราะตรวจสอบสูตรย้อนกลับไม่สำเร็จ) หน่วยเป็นนาที</div><div class="chart-box tall" id="chLostTimeStage"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>สรุปเวลาแต่ละช่วง — จุดไหนน่าเป็นห่วง</h2><p>เฉลี่ย/ต่ำสุด/สูงสุด ของเวลาแต่ละ Gate และ Shipment ที่เวลาผิดปกติทางสถิติ</p></div></div>
+    <div class="panel reveal">
+      <h3>สรุปเวลาแต่ละ Gate</h3>
+      <div class="sub">เฉลี่ย/ต่ำสุด/สูงสุด ของเวลาที่ใช้ที่ Gate นั้น (Running Time) จากทุกครั้งที่มีการเข้า — สถานะเทียบกับค่าเฉลี่ยรวมของทุก Gate: 🔴 น่าเป็นห่วง = เฉลี่ยสูงกว่าค่าเฉลี่ยรวมตั้งแต่ 50% ขึ้นไป · 🟡 เฝ้าระวัง = สูงกว่า 10-50% · 🟢 ปกติ = ไม่เกิน 10%</div>
+      <div id="gateSummaryTable"></div>
+    </div>
+    <div class="panel reveal">
+      <h3>Shipment ที่เวลาผิดปกติทางสถิติ</h3>
+      <div class="sub">Shipment ที่ใช้เวลารวม (Gate แรกถึง Gate สุดท้าย) สูงกว่า "ค่าเฉลี่ย + 2 เท่าของส่วนเบี่ยงเบนมาตรฐาน (SD)" ของ Shipment ทั้งหมดตามตัวกรองปัจจุบัน ถือเป็นค่าผิดปกติทางสถิติ (นอกกลุ่มปกติ ~95% ตามหลัก Normal Distribution) ควรตรวจสอบสาเหตุเป็นพิเศษ — คลิกที่แถวเพื่อดูไทม์ไลน์เต็ม</div>
+      <div class="kpi-grid" id="kpiShipmentAlert" style="margin-bottom:14px;"></div>
+      <table><thead><tr><th>#</th><th>Shipment</th><th>เวลารวม</th><th>รถ</th><th>SKU</th><th>Gate</th></tr></thead><tbody id="shipmentAlertTableBody"></tbody></table>
+    </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>Funnel กระบวนการทำงาน (Process Funnel)</h2><p>ดูว่า Shipment หลุด/ค้างอยู่ที่ขั้นไหนมากที่สุด ตั้งแต่ชั่งน้ำหนักเริ่มต้นจนออก Gate</p></div></div>
     <div class="panel reveal"><h3>Shipment ผ่านแต่ละขั้นตอนกี่เที่ยว</h3><div class="sub">นับจำนวน Shipment ที่มีข้อมูลบันทึกไว้ในแต่ละสเตจ (Weight Start → Shipment Time → Center Time → Weight Success → Gate Check out) เทียบกับจำนวน Shipment ทั้งหมดตามตัวกรองปัจจุบัน — ขั้นไหนที่จำนวนหล่นเยอะ แปลว่าเที่ยวรถจำนวนมากไม่ถูกบันทึกข้อมูล ณ ขั้นนั้น ควรตรวจสอบกระบวนการหน้างาน</div><div id="chProcessFunnel"></div></div>
@@ -781,8 +801,13 @@ function fmtClock(m){ if(m===null||m===undefined) return null; const h=Math.floo
 // ตรวจสอบแล้วว่ากรณี Gate-to-Gate ตรงกับคอลัมน์ Lost Time ของระบบต้นทาง 93.1%) ส่วนบนสุดสรุป
 // "รวมเวลาทั้งหมด" = จากจุดแรกสุดถึงจุดสุดท้ายสุดที่มีข้อมูล
 function buildTimelineHtml(sh, shipGates, gateAvgMap){
+  // ถ้า Weight Start (นาฬิกา) > Shipment Time แปลว่า Weight Start เกิดขึ้นตั้งแต่ "เมื่อวาน"
+  // ข้ามเที่ยงคืนมา (ชีตเก็บแค่เวลา ไม่มีวันที่) การเรียงลำดับแบบเดียวกันในวันเดียวจะผิด จึงตัด
+  // จุดนี้ออกจากไทม์ไลน์ (ไม่ใช่ derive/wrap เอาเอง เพราะไม่รู้ว่าข้ามมากี่วัน)
+  const wStartIsPrevDay = sh.wStartMin !== null && sh.wStartMin !== undefined &&
+    sh.shipTimeMin !== null && sh.shipTimeMin !== undefined && sh.wStartMin > sh.shipTimeMin;
   const stagePoints = [
-    { kind:'stage', label:'ชั่งน้ำหนักเริ่มต้น (Weight Start)', time: sh.wStartMin },
+    { kind:'stage', label:'ชั่งน้ำหนักเริ่มต้น (Weight Start)', time: wStartIsPrevDay ? null : sh.wStartMin },
     { kind:'stage', label:'เริ่ม Shipment (Shipment Time)', time: sh.shipTimeMin },
     { kind:'stage', label:'เข้า Center (Center Time)', time: sh.centerTimeMin },
     { kind:'stage', label:'ชั่งน้ำหนักสำเร็จ (Weight Success)', time: sh.wSuccessMin },
@@ -814,7 +839,8 @@ function buildTimelineHtml(sh, shipGates, gateAvgMap){
   const first = all[0], last = all[all.length-1];
   const lastEnd = (last.kind==='gate' && last.checkOut!==null && last.checkOut!==undefined) ? last.checkOut : last.time;
   let totalSpan = lastEnd - first.time; if(totalSpan < 0) totalSpan += 1440;
-  const totalHtml = `<div class="timeline-total">รวมเวลาทั้งหมด: <b>${fmtClock(first.time)} → ${fmtClock(lastEnd)} น.</b> = <b>${fmtMin(totalSpan)}</b></div>`;
+  const prevDayNote = wStartIsPrevDay ? `<div class="timeline-note">⚠ ไม่รวม "ชั่งน้ำหนักเริ่มต้น" ในไทม์ไลน์นี้ — เวลาที่บันทึกไว้อยู่หลัง Shipment Time แปลว่าชั่งน้ำหนักไว้ตั้งแต่วันก่อนหน้า (ข้ามเที่ยงคืนมา)</div>` : '';
+  const totalHtml = `<div class="timeline-total">รวมเวลาทั้งหมด: <b>${fmtClock(first.time)} → ${fmtClock(lastEnd)} น.</b> = <b>${fmtMin(totalSpan)}</b></div>${prevDayNote}`;
   return { rowsHtml, totalHtml };
 }
 
@@ -1057,6 +1083,8 @@ function render(model){
     document.getElementById('longestBox').innerHTML = `<div class="hc-icon">—</div><div><div class="hc-title">Longest Shipment</div><div class="hc-main">ไม่มีข้อมูล</div></div>`;
     document.getElementById('topTableBody').innerHTML = '';
     document.getElementById('topSkuTableBody').innerHTML = '';
+    document.getElementById('shipmentAlertTableBody').innerHTML = '';
+    emptyState('gateSummaryTable');
     document.getElementById('insightList').innerHTML = `<div class="insight"><div class="num">•</div><div class="body"><b>ไม่มีข้อมูล</b><p>ลองปรับตัวกรองด้านบน</p></div></div>`;
     return;
   }
@@ -1379,6 +1407,88 @@ function render(model){
   ].filter(it => it.value > 0 || it.valueLabel !== '-');
   renderBars('chLostTimeStage', stageItems, {labelWidth:260, unit:'นาที'});
 
+  // ---- Time summary: which Gate / Shipment looks concerning ----
+  // Gate-level: avg/min/max per Gate, flagged red/yellow/green against the overall
+  // average across ALL individual gate visits (not average-of-averages, so Gate
+  // ที่มีจำนวนครั้งเยอะมีน้ำหนักตามจริงในค่าเฉลี่ยรวม)
+  const gateSummaryRows = Object.entries(gateStats).map(([gate,arr])=>({
+    gate, avg: arr.reduce((a,b)=>a+b,0)/arr.length, min: Math.min(...arr), max: Math.max(...arr), count: arr.length,
+  })).sort((a,b)=>b.avg-a.avg);
+  const overallGateAvg = gateVisits.length ? gateVisits.reduce((a,v)=>a+v.minutes,0)/gateVisits.length : 0;
+  function gateFlag(avg){
+    if(overallGateAvg <= 0) return `<span class="flag-badge flag-green">🟢 ปกติ</span>`;
+    const ratio = avg / overallGateAvg;
+    if(ratio >= 1.5) return `<span class="flag-badge flag-red">🔴 น่าเป็นห่วง</span>`;
+    if(ratio >= 1.1) return `<span class="flag-badge flag-yellow">🟡 เฝ้าระวัง</span>`;
+    return `<span class="flag-badge flag-green">🟢 ปกติ</span>`;
+  }
+  if(gateSummaryRows.length){
+    document.getElementById('gateSummaryTable').innerHTML = `
+      <table class="time-table"><thead><tr><th>Gate</th><th>จำนวนครั้ง</th><th>เฉลี่ย</th><th>ต่ำสุด</th><th>สูงสุด</th><th>สถานะ</th></tr></thead><tbody>
+      ${gateSummaryRows.map(r=>`<tr>
+        <td class="tt-id">Gate ${r.gate}</td>
+        <td class="tt-num">${r.count}</td>
+        <td class="tt-num">${fmtMin(r.avg)}</td>
+        <td class="tt-num">${fmtMin(r.min)}</td>
+        <td class="tt-num">${fmtMin(r.max)}</td>
+        <td class="tt-num">${gateFlag(r.avg)}</td>
+      </tr>`).join('')}
+      </tbody></table>`;
+  } else {
+    emptyState('gateSummaryTable', 'ไม่มีข้อมูล Gate ตามตัวกรองนี้');
+  }
+
+  // Shipment-level: flag shipments whose total span is a statistical outlier
+  // (mean + 2 standard deviations, ~95% cutoff under a normal-distribution assumption)
+  const spanValues = spanShips.map(s=>s.span);
+  const spanMean = spanValues.length ? spanValues.reduce((a,b)=>a+b,0)/spanValues.length : 0;
+  const spanVariance = spanValues.length ? spanValues.reduce((a,b)=>a+Math.pow(b-spanMean,2),0)/spanValues.length : 0;
+  const spanStd = Math.sqrt(spanVariance);
+  const spanThreshold = spanMean + 2*spanStd;
+  const outlierShips = spanShips.filter(s=>s.span > spanThreshold).sort((a,b)=>b.span-a.span);
+
+  document.getElementById('kpiShipmentAlert').innerHTML = `
+    <div class="kpi reveal"><div class="top-row"><div class="icon">🚨</div></div><div class="label">Shipment ที่เวลาผิดปกติ</div><div class="value"><span class="cnt" data-t="${outlierShips.length}">0</span><small>เที่ยว</small></div><span class="delta warn">${fmtPct(outlierShips.length, spanShips.length)} ของ ${spanShips.length} เที่ยวที่มีข้อมูลเวลา</span></div>
+    <div class="kpi reveal"><div class="top-row"><div class="icon">📏</div></div><div class="label">เกณฑ์ที่ถือว่าผิดปกติ</div><div class="value">${fmtMin(spanThreshold)}</div><span class="delta info">เฉลี่ย ${fmtMin(spanMean)} + 2×SD (${fmtMin(spanStd)})</span></div>
+  `;
+  if(outlierShips.length){
+    document.getElementById('shipmentAlertTableBody').innerHTML = outlierShips.slice(0,15).map((s,i)=>{
+      const shipGates = gatesByShipment.get(s.id) || [];
+      const shipLines = linesByShipment.get(s.id) || [];
+      const timeline = buildTimelineHtml(s, shipGates, gateAvgMap);
+      const matRowsHtml = shipLines.length
+        ? shipLines.map(l=>`<div class="detail-mat-row"><span class="detail-mat-name" title="${(l.materialDesc||'').replace(/"/g,'&quot;')}">${l.materialDesc || '(ไม่ระบุ)'}</span><span class="detail-mat-weight">${l.weight.toLocaleString(undefined,{maximumFractionDigits:0})} กก.</span></div>`).join('')
+        : `<div class="empty-note" style="padding:12px 0;">ไม่มีข้อมูลสินค้า</div>`;
+      return `
+      <tr class="top-row" data-sid="${s.id}">
+        <td style="font-weight:600;color:var(--navy-800)"><span class="row-chevron">▸</span>${i+1}</td>
+        <td>${s.id}</td>
+        <td>${fmtMin(s.span)}</td>
+        <td>${s.vehicleCode}</td>
+        <td>${s.lineCount}</td>
+        <td>${s.gateList.length}</td>
+      </tr>
+      <tr class="top-detail-row" data-sid-detail="${s.id}" style="display:none;">
+        <td colspan="6">
+          <div class="detail-grid">
+            <div class="detail-col">
+              <div class="detail-col-title">ไทม์ไลน์ทั้งหมด (${shipGates.length} Gate)</div>
+              ${timeline.totalHtml}
+              ${timeline.rowsHtml}
+            </div>
+            <div class="detail-col">
+              <div class="detail-col-title">สินค้าในเที่ยวนี้ (${shipLines.length} รายการ)</div>
+              ${matRowsHtml}
+            </div>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  } else {
+    document.getElementById('shipmentAlertTableBody').innerHTML = '';
+    emptyState('shipmentAlertTableBody', 'ไม่พบ Shipment ที่เวลาผิดปกติทางสถิติตามตัวกรองนี้ — ถือว่าปกติดี');
+  }
+
   // ---- Process funnel: how many shipments have data recorded at each stage ----
   const funnelStages = [
     {label: 'Shipment ทั้งหมด', value: totalShipments},
@@ -1689,6 +1799,7 @@ function setupRowExpand(containerId, rowClass, detailClass){
 }
 setupRowExpand('topTableBody', 'top-row', 'top-detail-row');
 setupRowExpand('topSkuTableBody', 'top-row', 'top-detail-row');
+setupRowExpand('shipmentAlertTableBody', 'top-row', 'top-detail-row');
 setupRowExpand('timeCompareTable', 'tt-row', 'tt-detail-row');
 
 // Keep the sticky filter bar pinned exactly below the topbar (measured, not
