@@ -396,6 +396,27 @@
     <div class="section-head reveal"><div><h2><span class="bar"></span>แนวโน้มรายเดือน (Monthly Trend)</h2><p>จำนวนเที่ยวและน้ำหนักรวม แบ่งเป็นรายเดือน — เห็นภาพรวมระยะยาวเมื่อมีข้อมูลสะสมหลายเดือน</p></div></div>
     <div class="panel reveal"><h3>จำนวน Shipment ต่อเดือน</h3><div class="sub">รวมจำนวน Shipment ของทุก Shipment ในเดือนเดียวกัน (ตาม Shipment Date)</div><div class="chart-box" style="height:auto;" id="chMonthlyCount"></div></div>
     <div class="panel reveal"><h3>น้ำหนักรวมต่อเดือน (ตัน)</h3><div class="sub">รวมน้ำหนักของทุก Shipment ในเดือนเดียวกัน หารด้วย 1,000 เพื่อแปลงเป็นตัน</div><div class="chart-box" style="height:auto;" id="chMonthlyWeight"></div></div>
+    <div class="panel reveal"><h3>เทียบเดือนต่อเดือน (Month-over-Month)</h3><div class="sub">% การเปลี่ยนแปลงของแต่ละเดือน เทียบกับเดือนก่อนหน้า — ต้องมีข้อมูลอย่างน้อย 2 เดือนขึ้นไปจึงจะเทียบได้</div><div id="momTable"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>แนวโน้มเวลาเฉลี่ยต่อเที่ยว (Cycle Time Trend)</h2><p>เวลารวมเฉลี่ยต่อ 1 Shipment (Gate แรกถึง Gate สุดท้าย) ในแต่ละวัน/สัปดาห์/เดือน — ต่างจากกราฟด้านบนที่ดู "ปริมาณ" กราฟนี้ดู "ความเร็ว" ว่าทำงานได้เร็วขึ้นหรือช้าลง</p></div></div>
+    <div class="panel reveal"><h3>เวลาเฉลี่ยต่อเที่ยว รายวัน (นาที)</h3><div class="sub">เฉลี่ยเวลารวม (Gate แรก → Gate สุดท้าย) ของทุก Shipment ในวันนั้นๆ</div><div class="chart-box" style="height:auto;" id="chCycleDaily"></div></div>
+    <div class="panel reveal"><h3>เวลาเฉลี่ยต่อเที่ยว รายสัปดาห์ (นาที)</h3><div class="sub">เฉลี่ยเวลารวมของทุก Shipment ในสัปดาห์เดียวกัน (เริ่มวันจันทร์)</div><div class="chart-box" style="height:auto;" id="chCycleWeekly"></div></div>
+    <div class="panel reveal"><h3>เวลาเฉลี่ยต่อเที่ยว รายเดือน (นาที)</h3><div class="sub">เฉลี่ยเวลารวมของทุก Shipment ในเดือนเดียวกัน</div><div class="chart-box" style="height:auto;" id="chCycleMonthly"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>Heatmap ความหนาแน่น วัน x ชั่วโมง</h2><p>รวมวันในสัปดาห์และชั่วโมงเข้า Gate แรกเข้าด้วยกัน เพื่อดูช่วงเวลาที่หนาแน่นที่สุดแบบละเอียด</p></div></div>
+    <div class="panel reveal"><h3>จำนวนเที่ยวรถ ตามวัน x ชั่วโมง</h3><div class="sub">สีเข้มขึ้น = จำนวนเที่ยวมากขึ้น นับจากเวลาเข้า Gate แรกของแต่ละ Shipment — เลื่อนเมาส์ที่ช่องเพื่อดูตัวเลขเป๊ะๆ</div><div id="dowHourHeatmap"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>สมดุลภาระงานระหว่าง Gate (Gate Load Balance)</h2><p>เทียบสัดส่วนจำนวนครั้งที่แต่ละ Gate ถูกใช้งาน กับสัดส่วนที่ควรจะเป็นถ้าทุก Gate รับงานเท่ากัน เพื่อดูว่า Gate ไหนรับงานเกิน/ต่ำกว่าสมดุล</p></div></div>
+    <div class="panel reveal"><div id="gateLoadTable"></div></div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>ลูกค้า &amp; สินค้าที่มาแรง หรือ กำลังลดลง</h2><p>เทียบสัดส่วนเที่ยวรถของลูกค้า/สินค้าแต่ละราย ระหว่างครึ่งแรกกับครึ่งหลังของช่วงเวลาที่เลือก เพื่อดูว่าใครโตขึ้นหรือลดลง</p></div></div>
+    <div class="grid-2 reveal">
+      <div class="panel"><h3>ลูกค้าที่สัดส่วนเปลี่ยนแปลงมากที่สุด</h3><div class="sub" id="trendCustSub">เทียบสัดส่วนจำนวนเที่ยวของลูกค้า ระหว่างครึ่งแรก vs ครึ่งหลังของช่วงเวลา</div><div id="trendCustTable"></div></div>
+      <div class="panel"><h3>สินค้าที่สัดส่วนเปลี่ยนแปลงมากที่สุด</h3><div class="sub" id="trendMatSub">เทียบสัดส่วนจำนวนเที่ยวของสินค้า (Material Desc) ระหว่างครึ่งแรก vs ครึ่งหลังของช่วงเวลา</div><div id="trendMatTable"></div></div>
+    </div>
+
+    <div class="section-head reveal"><div><h2><span class="bar"></span>คุณภาพข้อมูล (Data Completeness)</h2><p>ตรวจว่าแต่ละคอลัมน์สำคัญมีข้อมูลครบแค่ไหน — ช่วยประเมินความน่าเชื่อถือของตัวเลขในแดชบอร์ดนี้</p></div></div>
+    <div class="panel reveal"><div id="dataQualityTable"></div></div>
 
     <div style="margin-top:24px;" class="reveal"><div class="alert-banner" id="alertBanner"></div></div>
 
@@ -1290,7 +1311,8 @@ function render(model){
 
   if(!totalShipments){
     document.getElementById('kpiGrid').innerHTML = `<div class="empty-note" style="grid-column:1/-1;">ไม่มี Shipment ตรงกับตัวกรองที่เลือก</div>`;
-    ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chHourlyOut','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCooccur','chMaterialCooccur','chGateCooccur','chReturnCustomer','chReturnMaterial','chTopShipTo','chWeightHist','chDowTrend','chDailyCount','chDailyWeight','chWeeklyCount','chWeeklyWeight','chMonthlyCount','chMonthlyWeight'].forEach(id=>emptyState(id));
+    ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chHourlyOut','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCooccur','chMaterialCooccur','chGateCooccur','chReturnCustomer','chReturnMaterial','chTopShipTo','chWeightHist','chDowTrend','chDailyCount','chDailyWeight','chWeeklyCount','chWeeklyWeight','chMonthlyCount','chMonthlyWeight','chCycleDaily','chCycleWeekly','chCycleMonthly'].forEach(id=>emptyState(id));
+    ['momTable','dowHourHeatmap','gateLoadTable','trendCustTable','trendMatTable','dataQualityTable'].forEach(id=>emptyState(id));
     document.getElementById('legJobType').innerHTML=''; document.getElementById('legStatus').innerHTML=''; document.getElementById('legVehicleShare').innerHTML='';
     document.getElementById('chIssueSub').textContent = 'จำนวนเที่ยวรถที่มีหมายเหตุปัญหา แยกตามประเภท';
     document.getElementById('chHourlySub').textContent = 'ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment (แสดงเฉพาะชั่วโมงที่มีข้อมูล)';
@@ -1977,6 +1999,206 @@ function render(model){
   // เดือนสั้นพอ ("ก.ค. 69") ทนได้มากกว่ารายสัปดาห์ แต่ก็ปล่อย auto-thin เหมือนกันเผื่อสะสมข้ามปี
   renderLineChart('chMonthlyCount', monthlyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString(), maxValueLabels: 999});
   renderLineChart('chMonthlyWeight', monthlyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1}), maxValueLabels: 999});
+
+  // ---- Month-over-Month: % เปลี่ยนแปลงของแต่ละเดือน เทียบเดือนก่อนหน้า (ต้องมี >= 2 เดือน) ----
+  if(monthlyKeys.length >= 2){
+    const momRows = monthlyKeys.map((k,i)=>{
+      const cur = monthlyMap.get(k);
+      const prev = i>0 ? monthlyMap.get(monthlyKeys[i-1]) : null;
+      const countChg = prev && prev.count>0 ? (cur.count-prev.count)/prev.count*100 : null;
+      const weightChg = prev && prev.weight>0 ? (cur.weight-prev.weight)/prev.weight*100 : null;
+      return {label: monthLabel(k), count:cur.count, weight:cur.weight, countChg, weightChg};
+    });
+    const chgCell = v => v===null ? '<span style="color:var(--grey-400)">-</span>' : `<span style="color:${v>0?'#1a8a4a':v<0?'var(--orange-600)':'var(--grey-500)'}">${v>0?'▲':v<0?'▼':'—'} ${Math.abs(v).toFixed(1)}%</span>`;
+    document.getElementById('momTable').innerHTML = `
+      <table class="time-table"><thead><tr><th>เดือน</th><th>จำนวนเที่ยว</th><th>เทียบเดือนก่อน</th><th>น้ำหนัก (ตัน)</th><th>เทียบเดือนก่อน</th></tr></thead><tbody>
+      ${momRows.map(r=>`<tr>
+        <td class="tt-id">${r.label}</td>
+        <td class="tt-num">${r.count.toLocaleString()}</td>
+        <td class="tt-num">${chgCell(r.countChg)}</td>
+        <td class="tt-num">${fmtNum(r.weight/1000,1)}</td>
+        <td class="tt-num">${chgCell(r.weightChg)}</td>
+      </tr>`).join('')}
+      </tbody></table>`;
+  } else {
+    emptyState('momTable', 'มีข้อมูลแค่ 1 เดือน — ต้องมีอย่างน้อย 2 เดือนขึ้นไปถึงจะเทียบ % เปลี่ยนแปลงได้ (เพิ่มขึ้นอัตโนมัติเมื่อข้อมูลเดือนใหม่เข้ามา)');
+  }
+
+  // ---- แนวโน้มเวลาเฉลี่ยต่อเที่ยว (Cycle Time Trend) — ใช้ spanShips (เที่ยวที่คำนวณเวลารวมได้)
+  // ต่างจากกราฟปริมาณด้านบน ชุดนี้ดู "ความเร็วในการทำงาน" เฉลี่ย ว่าเร็วขึ้นหรือช้าลงตามช่วงเวลา ----
+  const cycleDailyMap = new Map();
+  spanShips.forEach(s=>{ if(!s.dateKey) return; if(!cycleDailyMap.has(s.dateKey)) cycleDailyMap.set(s.dateKey, {sum:0, count:0}); const c = cycleDailyMap.get(s.dateKey); c.sum += s.span; c.count += 1; });
+  const cycleDailyKeys = Array.from(cycleDailyMap.keys()).sort();
+  const cycleDailyPoints = cycleDailyKeys.map((k,i)=>({x: compactDayLabel(k,i), tooltipLabel: dayLabel(k), y: cycleDailyMap.get(k).sum/cycleDailyMap.get(k).count}));
+  renderLineChart('chCycleDaily', cycleDailyPoints, {color:'#7a3ac0', tooltipFmt: v=>fmtMin(v), valueLabelFmt: v=>Math.round(v).toLocaleString(), maxLabels:999, maxValueLabels:999});
+
+  const cycleWeeklyMap = new Map();
+  spanShips.forEach(s=>{ if(!s.dateKey) return; const wk = weekKeyOf(s.dateKey); if(!cycleWeeklyMap.has(wk)) cycleWeeklyMap.set(wk, {sum:0, count:0}); const c = cycleWeeklyMap.get(wk); c.sum += s.span; c.count += 1; });
+  const cycleWeeklyKeys = Array.from(cycleWeeklyMap.keys()).sort();
+  const cycleWeeklyPoints = cycleWeeklyKeys.map(wk=>({x: weekRangeLabel(wk), y: cycleWeeklyMap.get(wk).sum/cycleWeeklyMap.get(wk).count}));
+  renderLineChart('chCycleWeekly', cycleWeeklyPoints, {color:'#7a3ac0', tooltipFmt: v=>fmtMin(v), valueLabelFmt: v=>Math.round(v).toLocaleString(), maxValueLabels:999});
+
+  const cycleMonthlyMap = new Map();
+  spanShips.forEach(s=>{ if(!s.month) return; if(!cycleMonthlyMap.has(s.month)) cycleMonthlyMap.set(s.month, {sum:0, count:0}); const c = cycleMonthlyMap.get(s.month); c.sum += s.span; c.count += 1; });
+  const cycleMonthlyKeys = Array.from(cycleMonthlyMap.keys()).sort();
+  const cycleMonthlyPoints = cycleMonthlyKeys.map(k=>({x: monthCompactLabel(k), tooltipLabel: monthLabel(k), y: cycleMonthlyMap.get(k).sum/cycleMonthlyMap.get(k).count}));
+  renderLineChart('chCycleMonthly', cycleMonthlyPoints, {color:'#7a3ac0', tooltipFmt: v=>fmtMin(v), valueLabelFmt: v=>Math.round(v).toLocaleString(), maxValueLabels:999});
+
+  // ---- Heatmap วัน x ชั่วโมง (รวม Day-of-week + ชั่วโมงเข้า Gate แรก) ----
+  const dowLabelsHm = ['จ','อ','พ','พฤ','ศ','ส','อา'];
+  const dowFullNameHm = {'จ':'วันจันทร์','อ':'วันอังคาร','พ':'วันพุธ','พฤ':'วันพฤหัสบดี','ศ':'วันศุกร์','ส':'วันเสาร์','อา':'วันอาทิตย์'};
+  const heatGrid = {}; // "dowIdx-hour" -> count
+  let heatMax = 0;
+  shipmentList.forEach(s=>{
+    if(!s.dateKey || s.firstIn===null) return;
+    const [dy,dmo,dd] = s.dateKey.split('-').map(Number);
+    const jsDow = new Date(dy, dmo-1, dd).getDay();
+    const dowIdx = (jsDow+6)%7; // 0=จันทร์..6=อาทิตย์
+    const hour = Math.floor(s.firstIn/60);
+    const key = dowIdx+'-'+hour;
+    heatGrid[key] = (heatGrid[key]||0)+1;
+    if(heatGrid[key] > heatMax) heatMax = heatGrid[key];
+  });
+  const activeHours = Array.from({length:24}, (_,h)=>h).filter(h=> dowLabelsHm.some((_,d)=> heatGrid[d+'-'+h]));
+  if(activeHours.length && heatMax>0){
+    const cellColor = v => {
+      if(!v) return 'background:var(--grey-50);';
+      const t = v/heatMax; // 0..1
+      const r = Math.round(255 - t*(255-232)), g = Math.round(241 - t*(241-93)), b = Math.round(230 - t*(230-4));
+      return `background:rgb(${r},${g},${b}); color:${t>0.5?'#fff':'var(--navy-900)'};`;
+    };
+    let heatHtml = '<div style="overflow-x:auto;"><table class="time-table" style="min-width:640px;"><thead><tr><th>ชั่วโมง</th>' + dowLabelsHm.map(d=>`<th style="text-align:center;">${d}</th>`).join('') + '</tr></thead><tbody>';
+    activeHours.forEach(h=>{
+      heatHtml += `<tr><td class="tt-id">${String(h).padStart(2,'0')}:00</td>`;
+      dowLabelsHm.forEach((d,di)=>{
+        const v = heatGrid[di+'-'+h] || 0;
+        heatHtml += `<td style="text-align:center; font-weight:600; font-size:11.5px; ${cellColor(v)}" title="${dowFullNameHm[d]} ${String(h).padStart(2,'0')}:00 น. — ${v.toLocaleString()} เที่ยว">${v||''}</td>`;
+      });
+      heatHtml += '</tr>';
+    });
+    heatHtml += '</tbody></table></div><div class="legend-row" style="margin-top:12px;"><span class="chip"><i class="dot" style="background:var(--grey-50); border:1px solid var(--grey-100);"></i>ไม่มีรถ</span><span class="chip"><i class="dot" style="background:#e85d04;"></i>หนาแน่นสูงสุด (' + heatMax.toLocaleString() + ' เที่ยว)</span></div>';
+    document.getElementById('dowHourHeatmap').innerHTML = heatHtml;
+  } else {
+    emptyState('dowHourHeatmap', 'ไม่มีข้อมูลเวลาเข้า Gate ตามตัวกรองนี้');
+  }
+
+  // ---- Gate load balance: เทียบสัดส่วนจริงของแต่ละ Gate กับสัดส่วนที่ "ควรจะเป็น" ถ้าทุก Gate
+  // รับงานเท่ากันหมด (100% / จำนวน Gate) — ใช้ gateSummaryRows ที่คำนวณไว้แล้วด้านบน ----
+  if(gateSummaryRows.length){
+    const gateTotalVisits = gateSummaryRows.reduce((a,r)=>a+r.count,0);
+    const equalShare = 100/gateSummaryRows.length;
+    const loadRows = gateSummaryRows.map(r=>({...r, sharePct: gateTotalVisits? r.count/gateTotalVisits*100 : 0}))
+      .sort((a,b)=>b.sharePct-a.sharePct);
+    const loadFlag = diff => diff >= equalShare*0.5 ? '<span class="flag-badge flag-red">🔴 รับงานเกินสมดุลมาก</span>'
+      : diff >= equalShare*0.15 ? '<span class="flag-badge flag-yellow">🟡 รับงานเกินสมดุลเล็กน้อย</span>'
+      : diff <= -equalShare*0.5 ? '<span class="flag-badge flag-yellow">🟡 รับงานต่ำกว่าสมดุลมาก</span>'
+      : '<span class="flag-badge flag-green">🟢 สมดุลดี</span>';
+    document.getElementById('gateLoadTable').innerHTML = `
+      <div class="sub" style="margin-bottom:14px;">มี ${gateSummaryRows.length} Gate ทั้งหมด — ถ้าแบ่งงานเท่ากันทุก Gate จะได้ Gate ละ <b>${equalShare.toFixed(1)}%</b> ของงานทั้งหมด (${Math.round(gateTotalVisits/gateSummaryRows.length).toLocaleString()} ครั้ง)</div>
+      <table class="time-table"><thead><tr><th>Gate</th><th>จำนวนครั้ง</th><th>สัดส่วนจริง</th><th>ส่วนต่างจากสมดุล</th><th>สถานะ</th></tr></thead><tbody>
+      ${loadRows.map(r=>{ const diff = r.sharePct-equalShare; return `<tr>
+        <td class="tt-id">Gate ${r.gate}</td>
+        <td class="tt-num">${r.count.toLocaleString()}</td>
+        <td class="tt-num">${r.sharePct.toFixed(1)}%<div class="pareto-cum-track"><i style="width:${Math.min(r.sharePct,100).toFixed(1)}%"></i></div></td>
+        <td class="tt-num" style="color:${diff>0?'var(--orange-600)':diff<0?'var(--navy-700)':'var(--grey-500)'}">${diff>0?'+':''}${diff.toFixed(1)}%</td>
+        <td class="tt-num">${loadFlag(diff)}</td>
+      </tr>`; }).join('')}
+      </tbody></table>`;
+  } else {
+    emptyState('gateLoadTable', 'ไม่มีข้อมูล Gate ตามตัวกรองนี้');
+  }
+
+  // ---- ลูกค้า/สินค้าที่มาแรงหรือกำลังลดลง: แบ่งช่วงเวลาเป็นครึ่งแรก-ครึ่งหลัง (ตามจำนวนวันจริง
+  // ในตัวกรอง ไม่ใช่ผ่าครึ่งจำนวนเที่ยว กันเที่ยวกระจุกวันเดียวเบี้ยวช่วง) แล้วเทียบสัดส่วน % ----
+  const trendDateKeys = Array.from(new Set(shipmentList.map(s=>s.dateKey).filter(Boolean))).sort();
+  if(trendDateKeys.length >= 4){
+    const midIdx = Math.floor(trendDateKeys.length/2);
+    const firstHalfDates = new Set(trendDateKeys.slice(0, midIdx));
+    const secondHalfDates = new Set(trendDateKeys.slice(midIdx));
+    const rangeLabel = (arr) => arr.length ? `${dayLabel(arr[0])} - ${dayLabel(arr[arr.length-1])}` : '-';
+    const halfLabel1 = rangeLabel(trendDateKeys.slice(0, midIdx));
+    const halfLabel2 = rangeLabel(trendDateKeys.slice(midIdx));
+    document.getElementById('trendCustSub').innerHTML = `เทียบสัดส่วนจำนวนเที่ยวของลูกค้า ระหว่าง <b>ครึ่งแรก</b> (${halfLabel1}) vs <b>ครึ่งหลัง</b> (${halfLabel2})`;
+    document.getElementById('trendMatSub').innerHTML = `เทียบสัดส่วนจำนวนเที่ยวของสินค้า ระหว่าง <b>ครึ่งแรก</b> (${halfLabel1}) vs <b>ครึ่งหลัง</b> (${halfLabel2})`;
+
+    function buildTrendRows(keyFn, totalFirst, totalSecond){
+      const firstMap = {}, secondMap = {};
+      shipmentList.forEach(s=>{
+        if(!s.dateKey) return;
+        const k = keyFn(s); if(!k) return;
+        if(firstHalfDates.has(s.dateKey)) firstMap[k] = (firstMap[k]||0)+1;
+        else if(secondHalfDates.has(s.dateKey)) secondMap[k] = (secondMap[k]||0)+1;
+      });
+      const allKeys = new Set([...Object.keys(firstMap), ...Object.keys(secondMap)]);
+      const rows = Array.from(allKeys).map(k=>{
+        const c1 = firstMap[k]||0, c2 = secondMap[k]||0;
+        const p1 = totalFirst? c1/totalFirst*100 : 0, p2 = totalSecond? c2/totalSecond*100 : 0;
+        return {label:k, c1, c2, p1, p2, delta: p2-p1};
+      }).filter(r => r.c1+r.c2 >= 3); // ตัดออกที่มีเที่ยวน้อยเกินไป กันสัญญาณรบกวนสุ่ม
+      return rows.sort((a,b)=>b.delta-a.delta);
+    }
+    const custTotalFirst = shipmentList.filter(s=>firstHalfDates.has(s.dateKey)).length;
+    const custTotalSecond = shipmentList.filter(s=>secondHalfDates.has(s.dateKey)).length;
+    const custTrendRows = buildTrendRows(s=>cleanCustomerName(s.soldTo)||null, custTotalFirst, custTotalSecond);
+
+    // lookup วันที่ของแต่ละ Shipment ล่วงหน้าเป็น Map กันการวน .find() ซ้ำๆ ต่อบรรทัดสินค้า (ช้าเมื่อข้อมูลใหญ่)
+    const shipDateMap = new Map(shipmentList.map(s=>[s.id, s.dateKey]));
+    const matFirstMap = {}, matSecondMap = {};
+    let matTotalFirstN = 0, matTotalSecondN = 0;
+    lines.forEach(l=>{
+      if(!l.materialDesc) return;
+      const dk = shipDateMap.get(l.shipment); if(!dk) return;
+      if(firstHalfDates.has(dk)){ matFirstMap[l.materialDesc] = (matFirstMap[l.materialDesc]||0)+1; matTotalFirstN++; }
+      else if(secondHalfDates.has(dk)){ matSecondMap[l.materialDesc] = (matSecondMap[l.materialDesc]||0)+1; matTotalSecondN++; }
+    });
+    const matAllKeys = new Set([...Object.keys(matFirstMap), ...Object.keys(matSecondMap)]);
+    const matTrendRows = Array.from(matAllKeys).map(k=>{
+      const c1 = matFirstMap[k]||0, c2 = matSecondMap[k]||0;
+      const p1 = matTotalFirstN? c1/matTotalFirstN*100 : 0, p2 = matTotalSecondN? c2/matTotalSecondN*100 : 0;
+      return {label:k, c1, c2, p1, p2, delta: p2-p1};
+    }).filter(r=>r.c1+r.c2>=3).sort((a,b)=>b.delta-a.delta);
+
+    const trendTableHtml = (rows) => {
+      if(!rows.length) return `<div class="empty-note">ข้อมูลไม่พอสำหรับเปรียบเทียบตามตัวกรองนี้</div>`;
+      const top5Up = rows.slice(0,5), top5Down = rows.slice(-5).reverse().filter(r=>r.delta<0);
+      const rowHtml = r => `<tr>
+        <td class="tt-id" style="max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${r.label.replace(/"/g,'&quot;')}">${r.label}</td>
+        <td class="tt-num">${r.p1.toFixed(1)}%</td>
+        <td class="tt-num">${r.p2.toFixed(1)}%</td>
+        <td class="tt-num" style="color:${r.delta>0?'#1a8a4a':r.delta<0?'var(--orange-600)':'var(--grey-500)'}">${r.delta>0?'▲':r.delta<0?'▼':'—'} ${Math.abs(r.delta).toFixed(1)} จุด</td>
+      </tr>`;
+      return `<table class="time-table"><thead><tr><th></th><th>ครึ่งแรก</th><th>ครึ่งหลัง</th><th>เปลี่ยนแปลง</th></tr></thead><tbody>
+        <tr><td colspan="4" style="font-weight:600; color:var(--navy-800); background:var(--grey-50);">📈 มาแรงที่สุด</td></tr>
+        ${top5Up.map(rowHtml).join('')}
+        ${top5Down.length ? `<tr><td colspan="4" style="font-weight:600; color:var(--navy-800); background:var(--grey-50);">📉 ลดลงมากที่สุด</td></tr>${top5Down.map(rowHtml).join('')}` : ''}
+      </tbody></table>`;
+    };
+    document.getElementById('trendCustTable').innerHTML = trendTableHtml(custTrendRows);
+    document.getElementById('trendMatTable').innerHTML = trendTableHtml(matTrendRows);
+  } else {
+    emptyState('trendCustTable', 'ต้องมีข้อมูลอย่างน้อย 4 วันขึ้นไปถึงจะแบ่งครึ่งเปรียบเทียบได้');
+    emptyState('trendMatTable', 'ต้องมีข้อมูลอย่างน้อย 4 วันขึ้นไปถึงจะแบ่งครึ่งเปรียบเทียบได้');
+    document.getElementById('trendCustSub').textContent = 'เทียบสัดส่วนจำนวนเที่ยวของลูกค้า ระหว่างครึ่งแรก vs ครึ่งหลังของช่วงเวลา';
+    document.getElementById('trendMatSub').textContent = 'เทียบสัดส่วนจำนวนเที่ยวของสินค้า (Material Desc) ระหว่างครึ่งแรก vs ครึ่งหลังของช่วงเวลา';
+  }
+
+  // ---- คุณภาพข้อมูล (Data Completeness) ----
+  const dqChecks = [
+    {label:'ไม่มี Gate บันทึกไว้เลย', bad: shipmentList.filter(s=>!s.gateList || !s.gateList.length).length},
+    {label:'น้ำหนักเป็น 0 หรือไม่มีข้อมูล', bad: shipmentList.filter(s=>!s.weight || s.weight<=0).length},
+    {label:'ไม่มีเวลาเข้า Gate แรก (Gate Check in)', bad: shipmentList.filter(s=>s.firstIn===null).length},
+    {label:'คำนวณเวลารวมทั้งเที่ยวไม่ได้ (Gate แรก-สุดท้าย)', bad: shipmentList.filter(s=>s.span===null).length},
+    {label:'ไม่มีชื่อลูกค้า (Sold To Name)', bad: shipmentList.filter(s=>!s.soldTo || !s.soldTo.trim()).length},
+    {label:'ไม่มีประเภทรถระบุ', bad: shipmentList.filter(s=>!s.vehicleCode).length},
+  ];
+  document.getElementById('dataQualityTable').innerHTML = `
+    <table class="time-table"><thead><tr><th>รายการตรวจสอบ</th><th>จำนวนเที่ยวที่ขาดข้อมูล</th><th>% ของทั้งหมด</th><th>สถานะ</th></tr></thead><tbody>
+    ${dqChecks.map(c=>{
+      const pct = totalShipments? c.bad/totalShipments*100 : 0;
+      const status = pct===0 ? '<span class="flag-badge flag-green">🟢 ครบถ้วน</span>' : pct<5 ? '<span class="flag-badge flag-yellow">🟡 ขาดเล็กน้อย</span>' : '<span class="flag-badge flag-red">🔴 ควรตรวจสอบ</span>';
+      return `<tr><td class="tt-id">${c.label}</td><td class="tt-num">${c.bad.toLocaleString()}</td><td class="tt-num">${pct.toFixed(1)}%</td><td class="tt-num">${status}</td></tr>`;
+    }).join('')}
+    </tbody></table>`;
 
   // ---- Customer Pareto (80/20) + one-time-customer stat ----
   const custMap = new Map(); // ชื่อลูกค้าที่ตัดคำนำหน้าแล้ว -> {count, weight}
