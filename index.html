@@ -368,7 +368,7 @@
     <div class="grid-3 reveal">
       <div class="panel"><h3>ประเภทงาน (Job Type)</h3><div class="sub">แยกตามจำนวนเที่ยวรถ vs น้ำหนัก</div><div class="chart-box" id="chJobType"></div><div class="legend-row" id="legJobType"></div></div>
       <div class="panel"><h3>สถานะงาน (Job Status)</h3><div class="sub">งานปกติ / ลูกค้ารับเอง / ด่วน (Urgent)</div><div class="chart-box" id="chStatus"></div><div class="legend-row" id="legStatus"></div></div>
-      <div class="panel"><h3>ปัญหาที่พบระหว่างงาน (Issue)</h3><div class="sub">จำนวนเที่ยวรถที่มีหมายเหตุปัญหา</div><div class="chart-box" id="chIssue"></div></div>
+      <div class="panel"><h3>ปัญหาที่พบระหว่างงาน (Issue)</h3><div class="sub" id="chIssueSub">จำนวนเที่ยวรถที่มีหมายเหตุปัญหา แยกตามประเภท</div><div class="chart-box" id="chIssue"></div></div>
     </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>แนวโน้มรายวัน (Daily Trend)</h2><p>จำนวนเที่ยวและน้ำหนักรวมในแต่ละวัน ตามช่วงเวลาที่เลือกในตัวกรอง</p></div></div>
@@ -1250,6 +1250,7 @@ function render(model){
     document.getElementById('kpiGrid').innerHTML = `<div class="empty-note" style="grid-column:1/-1;">ไม่มี Shipment ตรงกับตัวกรองที่เลือก</div>`;
     ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chHourlyOut','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCooccur','chMaterialCooccur','chReturnCustomer','chReturnMaterial','chTopShipTo','chWeightHist','chDowTrend','chDailyCount','chDailyWeight','chWeeklyCount','chWeeklyWeight','chMonthlyCount','chMonthlyWeight'].forEach(id=>emptyState(id));
     document.getElementById('legJobType').innerHTML=''; document.getElementById('legStatus').innerHTML=''; document.getElementById('legVehicleShare').innerHTML='';
+    document.getElementById('chIssueSub').textContent = 'จำนวนเที่ยวรถที่มีหมายเหตุปัญหา แยกตามประเภท';
     document.getElementById('alertBanner').innerHTML = `<div class="lead">No Data</div><h3>ไม่มีข้อมูลตามตัวกรองที่เลือก</h3><p>ลองล้างตัวกรองหรือเลือกเดือน/ประเภทรถ/Gate อื่น</p>`;
     document.getElementById('topTableBody').innerHTML = '';
     document.getElementById('topSkuTableBody').innerHTML = '';
@@ -1288,18 +1289,30 @@ function render(model){
   renderDonut('chStatus', stEntries.map(([label,value],i)=>({label,value,color:stColors[i%stColors.length]})), {unit:'เที่ยว', centerBig: totalShipments.toLocaleString(), centerSmall:'เที่ยวรวม'});
   document.getElementById('legStatus').innerHTML = stEntries.map(([label,value],i)=>`<span class="chip"><i class="dot" style="background:${stColors[i%stColors.length]}"></i>${label} ${value} (${fmtPct(value,totalShipments)})</span>`).join('');
 
-  const issueCounts = { 'ไม่มีปัญหา': 0 };
-  shipmentList.forEach(s=>{ const t = s.issue && s.issue.trim() ? s.issue.trim() : 'ไม่มีปัญหา'; issueCounts[t] = (issueCounts[t]||0)+1; });
+  // เดิมกราฟนี้เอา "ไม่มีปัญหา" (ซึ่งมักเป็นสัดส่วนที่มากที่สุดเกิน 95%) มาปนในกราฟแท่งเดียวกับ
+  // ปัญหาจริงๆ ทำให้แท่งของปัญหาจริงเล็กจนแทบมองไม่เห็น (ค่าสูงสุดที่ใช้ปรับสัดส่วนคือ "ไม่มีปัญหา")
+  // เปลี่ยนใหม่: นับเฉพาะเที่ยวที่ "มี" ปัญหาจริงเข้ากราฟ ทำให้เห็นสัดส่วนของแต่ละประเภทปัญหาชัดเจน
+  // ส่วนภาพรวม "มีปัญหากี่ % ของทั้งหมด" ย้ายไปโชว์เป็นข้อความสรุปเหนือกราฟแทน
+  const issueCounts = {};
+  let totalWithIssue = 0;
+  shipmentList.forEach(s=>{ const t = s.issue && s.issue.trim(); if(t){ issueCounts[t] = (issueCounts[t]||0)+1; totalWithIssue++; } });
   let issueEntries = Object.entries(issueCounts).sort((a,b)=>b[1]-a[1]);
   if(issueEntries.length > 6){ const top = issueEntries.slice(0,5); const restSum = issueEntries.slice(5).reduce((a,[,v])=>a+v,0); issueEntries = top.concat([['อื่นๆ', restSum]]); }
-  const issColors = ['linear-gradient(90deg,#c3ccd8,#dfe4ea)', `linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`, `linear-gradient(90deg, ${NAVY}, ${NAVY2})`, `linear-gradient(90deg, ${NAVY2}, ${NAVY3})`, `linear-gradient(90deg, ${GREY}, #b8c2cf)`, `linear-gradient(90deg, ${ORANGE}, ${ORANGE2})`];
-  renderBars('chIssue', issueEntries.map(([label,value],i)=>({
-    label, value, valueLabel:`${value} (${fmtPct(value,totalShipments)})`,
-    color: label==='ไม่มีปัญหา'?issColors[0]:issColors[(i%(issColors.length-1))+1],
-    tooltip:`<b>${label}</b><br>${value} เที่ยว (${fmtPct(value,totalShipments)})`
-  })), {unit:'เที่ยว'});
+  const issColors = [`linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`, `linear-gradient(90deg, ${NAVY}, ${NAVY2})`, `linear-gradient(90deg, ${NAVY2}, ${NAVY3})`, `linear-gradient(90deg, ${GREY}, #b8c2cf)`, `linear-gradient(90deg, ${ORANGE}, ${ORANGE2})`, `linear-gradient(90deg, ${NAVY3}, ${GREY})`];
+  document.getElementById('chIssueSub').innerHTML = totalWithIssue
+    ? `แยกตามประเภทปัญหา เฉพาะเที่ยวที่มีหมายเหตุ (ไม่รวม "ไม่มีปัญหา" กันบังสัดส่วนปัญหาจริง) — รวม <b>${totalWithIssue.toLocaleString()}</b> จาก ${totalShipments.toLocaleString()} เที่ยวมีปัญหา (${fmtPct(totalWithIssue,totalShipments)})`
+    : 'ไม่พบเที่ยวที่มีหมายเหตุปัญหาตามตัวกรองนี้';
+  if(issueEntries.length){
+    renderBars('chIssue', issueEntries.map(([label,value],i)=>({
+      label, value, valueLabel:`${value.toLocaleString()} (${fmtPct(value,totalWithIssue)})`,
+      color: issColors[i%issColors.length],
+      tooltip:`<b>${label}</b><br>${value.toLocaleString()} เที่ยว (${fmtPct(value,totalWithIssue)} ของเที่ยวที่มีปัญหา · ${fmtPct(value,totalShipments)} ของทั้งหมด)`
+    })), {unit:'เที่ยว'});
+  } else {
+    emptyState('chIssue', 'ไม่พบเที่ยวที่มีหมายเหตุปัญหาตามตัวกรองนี้ 🎉');
+  }
 
-  const worstIssue = issueEntries.filter(([l])=>l!=='ไม่มีปัญหา').sort((a,b)=>b[1]-a[1])[0];
+  const worstIssue = issueEntries[0];
   document.getElementById('alertBanner').innerHTML = worstIssue ? `
     <div class="lead">Operational Bottleneck</div>
     <h3>ปัญหาที่พบบ่อยที่สุด: "${worstIssue[0]}"</h3>
