@@ -803,12 +803,15 @@ function fmtClock(m){ if(m===null||m===undefined) return null; const h=Math.floo
 // ตรวจสอบแล้วว่ากรณี Gate-to-Gate ตรงกับคอลัมน์ Lost Time ของระบบต้นทาง 93.1%) ส่วนบนสุดสรุป
 // "รวมเวลาทั้งหมด" = จากจุดแรกสุดถึงจุดสุดท้ายสุดที่มีข้อมูล
 function buildTimelineHtml(sh, shipGates, gateAvgMap){
-  // ถ้า Weight Start (นาฬิกา) > Shipment Time แปลว่า Weight Start เกิดขึ้นตั้งแต่ "เมื่อวาน"
-  // ข้ามเที่ยงคืนมา (ชีตเก็บแค่เวลา ไม่มีวันที่) -- แสดงจุดนี้ไว้เหมือนเดิม แต่บังคับให้อยู่
-  // อันดับแรกสุดของไทม์ไลน์เสมอ (แทนที่จะเรียงตามค่าตัวเลขนาฬิกาเฉยๆ ซึ่งจะทำให้จุดนี้ไปโผล่
-  // ท้ายสุดผิดที่) และติดป้าย "(เมื่อวาน)" ให้เห็นชัดว่าไม่ใช่วันเดียวกับจุดอื่น
+  // ถ้า Weight Start (นาฬิกา) > Shipment Time เฉยๆ ส่วนใหญ่เป็นเรื่องปกติมาก (เปิดงานตอนเช้า
+  // แล้วรอรถมาชั่งทีหลังในวันเดียวกัน -- ตรวจสอบข้อมูลจริงแล้วพบ 612/1671 เที่ยวเข้าเงื่อนไขนี้
+  // กระจายทั้งวัน ไม่ใช่แค่ "เมื่อวาน") สัญญาณที่แท้จริงของกรณี "ชั่งไว้ตั้งแต่เมื่อวาน" คือ
+  // Shipment Time ตรงเป๊ะ "7:30" ซึ่งพบ 81 ครั้ง -- มากกว่าค่าเวลาอื่นใดถึง ~7 เท่า (ค่าเวลาปกติ
+  // อื่นๆ จะเจอแค่ 10-12 ครั้ง) เป็นลายเซ็นชัดเจนของ batch job ที่เปิด Shipment อัตโนมัติตอนเช้า
+  // ให้กับรถที่ถูกชั่งไว้ตั้งแต่เมื่อวาน (ยืนยันจากผู้ใช้ระบบโดยตรง)
+  const SHIFT_START_BATCH_MIN = 7*60+30; // 7:30 = ลายเซ็น batch job เปิด Shipment ตอนเช้า
   const wStartIsPrevDay = sh.wStartMin !== null && sh.wStartMin !== undefined &&
-    sh.shipTimeMin !== null && sh.shipTimeMin !== undefined && sh.wStartMin > sh.shipTimeMin;
+    sh.shipTimeMin === SHIFT_START_BATCH_MIN && sh.wStartMin > sh.shipTimeMin;
   const stagePoints = [
     { kind:'stage', label: wStartIsPrevDay ? 'ชั่งน้ำหนักเริ่มต้น (Weight Start) — เมื่อวาน' : 'ชั่งน้ำหนักเริ่มต้น (Weight Start)', time: sh.wStartMin, prevDay: wStartIsPrevDay },
     { kind:'stage', label:'เริ่ม Shipment (Shipment Time)', time: sh.shipTimeMin },
