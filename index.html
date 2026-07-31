@@ -1479,7 +1479,7 @@ function render(model){
       <td style="font-weight:600;color:var(--navy-800)"><span class="row-chevron">▸</span>${i+1}</td>
       <td>${r.label}</td>
       <td class="tt-num">${r.count.toLocaleString()} <span style="color:var(--grey-500);font-size:12px;">(${fmtPct(r.count,custTotalCount)})</span></td>
-      <td class="tt-num">${fmtNum(r.weight/1000,1)} ตัน</td>
+      <td class="tt-num">${fmtNum(r.weight/1000,1)} ตัน <span style="color:var(--grey-500);font-size:12px;">(${fmtPct(r.weight,totalWeight)})</span></td>
     </tr>
     <tr class="top-detail-row" data-sid-detail="cust-${i}" style="display:none;">
       <td colspan="4">
@@ -1722,13 +1722,16 @@ function render(model){
     <div class="corr-card"><div class="cc-label">เวลารวม ↔ จำนวน Gate</div><div class="cc-value">${rGates!==null?rGates.toFixed(2):'-'}</div><div class="cc-note">${corrLabel(rGates)} — คำนวณจาก ${spanShips.length.toLocaleString()} เที่ยว</div></div>
   `;
 
-  // Stage breakdown bar chart (which stage eats the most time on average)
-  const stageItems = [
-    {label:'รอเข้า Gate', value: avgGateWait||0, valueLabel: avgGateWait!==null?fmtMin(avgGateWait):'-', color:'var(--orange-500)'},
-    {label:'Shipment Start − Weight Start', value: avgLt2||0, valueLabel: avgLt2!==null?fmtMin(avgLt2):'-', color:'var(--navy-700)'},
-    {label:'Center Process − Shipment Start', value: avgLt3||0, valueLabel: avgLt3!==null?fmtMin(avgLt3):'-', color:'var(--navy-400,#6b8cbf)'},
-  ].filter(it => it.value > 0 || it.valueLabel !== '-');
-  renderBars('chLostTimeStage', stageItems, {labelWidth:260, unit:'นาที'});
+  // Stage breakdown bar chart (which stage eats the most time on average) — % = สัดส่วน
+  // เวลาเฉลี่ยของสเตจนี้ เทียบกับผลรวมเวลาเฉลี่ยทั้ง 3 สเตจ ให้เห็นว่าสเตจไหน "กิน" เวลารวมมากสุด
+  const stageItemsRaw = [
+    {label:'รอเข้า Gate', value: avgGateWait||0, has: avgGateWait!==null, color:'var(--orange-500)'},
+    {label:'Shipment Start − Weight Start', value: avgLt2||0, has: avgLt2!==null, color:'var(--navy-700)'},
+    {label:'Center Process − Shipment Start', value: avgLt3||0, has: avgLt3!==null, color:'var(--navy-400,#6b8cbf)'},
+  ].filter(it => it.value > 0 || it.has);
+  const stageTotal = stageItemsRaw.reduce((a,it)=>a+it.value,0);
+  const stageItems = stageItemsRaw.map(it=>({...it, valueLabel: it.has ? `${fmtMin(it.value)} (${fmtPct(it.value,stageTotal)})` : '-'}));
+  renderBars('chLostTimeStage', stageItems, {labelWidth:260, valWidth:120, unit:'นาที'});
 
   // ---- Time summary: which Gate / Shipment looks concerning ----
   // Gate-level: avg/min/max per Gate, flagged red/yellow/green against the overall
@@ -1750,7 +1753,7 @@ function render(model){
       <table class="time-table"><thead><tr><th>Gate</th><th>จำนวนครั้ง</th><th>เฉลี่ย</th><th>ต่ำสุด</th><th>สูงสุด</th><th>สถานะ</th></tr></thead><tbody>
       ${gateSummaryRows.map(r=>`<tr>
         <td class="tt-id">Gate ${r.gate}</td>
-        <td class="tt-num">${r.count.toLocaleString()}</td>
+        <td class="tt-num">${r.count.toLocaleString()} <span style="color:var(--grey-500);font-size:11px;">(${fmtPct(r.count,gateVisits.length)})</span></td>
         <td class="tt-num">${fmtMin(r.avg)}</td>
         <td class="tt-num">${fmtMin(r.min)}</td>
         <td class="tt-num">${fmtMin(r.max)}</td>
@@ -2035,8 +2038,8 @@ function render(model){
     : '';
   document.getElementById('urgencyCompareTable').innerHTML = `
     <table class="time-table"><thead><tr><th></th><th>จำนวนเที่ยว</th><th>เวลารวมเฉลี่ย/เที่ยว</th><th>น้ำหนักเฉลี่ย/เที่ยว</th><th>อัตรามีปัญหา</th></tr></thead><tbody>
-      <tr><td class="tt-id">🔥 งาน Urgent</td><td class="tt-num">${urgStats.count.toLocaleString()}</td><td class="tt-num">${urgStats.avgSpan!==null?fmtMin(urgStats.avgSpan):'-'}</td><td class="tt-num">${fmtNum(urgStats.avgWeight/1000,2)} ตัน</td><td class="tt-num">${urgStats.issueRate.toFixed(1)}%</td></tr>
-      <tr><td class="tt-id">งานปกติ</td><td class="tt-num">${norStats.count.toLocaleString()}</td><td class="tt-num">${norStats.avgSpan!==null?fmtMin(norStats.avgSpan):'-'}</td><td class="tt-num">${fmtNum(norStats.avgWeight/1000,2)} ตัน</td><td class="tt-num">${norStats.issueRate.toFixed(1)}%</td></tr>
+      <tr><td class="tt-id">🔥 งาน Urgent</td><td class="tt-num">${urgStats.count.toLocaleString()} <span style="color:var(--grey-500);font-size:11px;">(${fmtPct(urgStats.count,totalShipments)})</span></td><td class="tt-num">${urgStats.avgSpan!==null?fmtMin(urgStats.avgSpan):'-'}</td><td class="tt-num">${fmtNum(urgStats.avgWeight/1000,2)} ตัน</td><td class="tt-num">${urgStats.issueRate.toFixed(1)}%</td></tr>
+      <tr><td class="tt-id">งานปกติ</td><td class="tt-num">${norStats.count.toLocaleString()} <span style="color:var(--grey-500);font-size:11px;">(${fmtPct(norStats.count,totalShipments)})</span></td><td class="tt-num">${norStats.avgSpan!==null?fmtMin(norStats.avgSpan):'-'}</td><td class="tt-num">${fmtNum(norStats.avgWeight/1000,2)} ตัน</td><td class="tt-num">${norStats.issueRate.toFixed(1)}%</td></tr>
     </tbody></table>
     ${urgencyCmpNote}
   `;
@@ -2057,8 +2060,8 @@ function render(model){
     const c = returnCustMap.get(name); c.count += 1; c.weight += s.weight;
   });
   const returnCustRows = Array.from(returnCustMap.entries()).map(([name,v])=>({name, ...v})).sort((a,b)=>b.count-a.count).slice(0,10);
-  // ตัวเลขบนแท่งใส่แค่จำนวนเที่ยว (สั้น กันล้นกรอบ 150px) น้ำหนักเต็มดูตอน hover แทน
-  renderBars('chReturnCustomer', returnCustRows.map(r=>({label:r.name, value:r.count, valueLabel:`${r.count.toLocaleString()} เที่ยว`, tooltip:`<b>${r.name}</b><br>${r.count.toLocaleString()} เที่ยว · น้ำหนักรวม ${fmtNum(r.weight/1000,1)} ตัน`, color:`linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`})), {labelWidth:220});
+  // % = สัดส่วนของเที่ยว Return ทั้งหมดที่เป็นลูกค้ารายนี้ ไว้เทียบน้ำหนักความสำคัญระหว่างลูกค้า
+  renderBars('chReturnCustomer', returnCustRows.map(r=>({label:r.name, value:r.count, valueLabel:`${r.count.toLocaleString()} (${fmtPct(r.count,returnShipments.length)})`, tooltip:`<b>${r.name}</b><br>${r.count.toLocaleString()} เที่ยว (${fmtPct(r.count,returnShipments.length)} ของเที่ยว Return ทั้งหมด) · น้ำหนักรวม ${fmtNum(r.weight/1000,1)} ตัน`, color:`linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`})), {labelWidth:220, valWidth:100});
 
   const returnMatMap = new Map();
   lines.forEach(l=>{
@@ -2067,18 +2070,22 @@ function render(model){
     const m = returnMatMap.get(l.materialDesc); m.weight += l.weight; m.ships.add(l.shipment);
   });
   const returnMatRows = Array.from(returnMatMap.entries()).map(([label,v])=>({label, value:v.weight, ships:v.ships.size})).sort((a,b)=>b.value-a.value).slice(0,10);
-  renderBars('chReturnMaterial', returnMatRows.map(r=>({label:r.label, value:r.value, valueLabel:`${fmtNum(r.value/1000,2)} ตัน`, tooltip:`<b>${r.label}</b><br>${fmtNum(r.value/1000,2)} ตัน · ${r.ships.toLocaleString()} เที่ยว`, color:`linear-gradient(90deg, ${NAVY3}, ${NAVY})`})), {labelWidth:220, labelLines:2});
+  const returnMatTotal = Array.from(returnMatMap.values()).reduce((a,v)=>a+v.weight,0);
+  renderBars('chReturnMaterial', returnMatRows.map(r=>({label:r.label, value:r.value, valueLabel:`${fmtNum(r.value/1000,2)} ต. (${fmtPct(r.value,returnMatTotal)})`, tooltip:`<b>${r.label}</b><br>${fmtNum(r.value/1000,2)} ตัน (${fmtPct(r.value,returnMatTotal)}) · ${r.ships.toLocaleString()} เที่ยว`, color:`linear-gradient(90deg, ${NAVY3}, ${NAVY})`})), {labelWidth:220, labelLines:2, valWidth:110});
 
   // ---- Top Ship-To destinations (ทุก Shipment/รายการสินค้า ไม่ใช่แค่ multi-destination) ----
   const destMap2 = new Map(); // ชื่อปลายทาง (ตัดคำแล้ว) -> {ships:Set, weight}
+  const shipToShipSet = new Set();
   lines.forEach(l=>{
     if(!l.shipTo) return;
+    shipToShipSet.add(l.shipment);
     const name = cleanCustomerName(l.shipTo) || l.shipTo;
     if(!destMap2.has(name)) destMap2.set(name, {ships:new Set(), weight:0});
     const d = destMap2.get(name); d.ships.add(l.shipment); d.weight += l.weight;
   });
+  const shipToTotal = shipToShipSet.size;
   const destRows2 = Array.from(destMap2.entries()).map(([name,v])=>({name, count:v.ships.size, weight:v.weight})).sort((a,b)=>b.count-a.count).slice(0,10);
-  renderBars('chTopShipTo', destRows2.map(r=>({label:r.name, value:r.count, valueLabel:`${r.count.toLocaleString()} เที่ยว`, tooltip:`<b>${r.name}</b><br>${r.count.toLocaleString()} เที่ยว · น้ำหนักรวม ${fmtNum(r.weight/1000,1)} ตัน`, color:`linear-gradient(90deg, ${NAVY3}, ${ORANGE})`})), {labelWidth:260});
+  renderBars('chTopShipTo', destRows2.map(r=>({label:r.name, value:r.count, valueLabel:`${r.count.toLocaleString()} (${fmtPct(r.count,shipToTotal)})`, tooltip:`<b>${r.name}</b><br>${r.count.toLocaleString()} เที่ยว (${fmtPct(r.count,shipToTotal)} ของเที่ยวที่มีข้อมูลปลายทาง) · น้ำหนักรวม ${fmtNum(r.weight/1000,1)} ตัน`, color:`linear-gradient(90deg, ${NAVY3}, ${ORANGE})`})), {labelWidth:260, valWidth:100});
 
   // ---- Weight distribution histogram ----
   const wBuckets = [
@@ -2104,12 +2111,14 @@ function render(model){
     const row = jtVehMatrix.get(v); row[t] = (row[t]||0)+1;
   });
   if(vehTypesXt.length && jtVehTypes.length){
+    // แถวรวมทุกประเภทรถ ไว้เป็นตัวหารคำนวณ % ต่อคอลัมน์ (สัดส่วนประเภทงานของแต่ละรถ เทียบรถคันอื่น)
+    const jtVehGrandTotal = vehTypesXt.reduce((a,v)=>{ const row = jtVehMatrix.get(v)||{}; return a + jtVehTypes.reduce((b,t)=>b+(row[t]||0),0); }, 0);
     document.getElementById('jtVehicleTable').innerHTML = `
       <table class="time-table"><thead><tr><th>ประเภทรถ</th>${jtVehTypes.map(t=>`<th>${jobTypeLabel(t)}</th>`).join('')}<th>รวม</th></tr></thead><tbody>
       ${vehTypesXt.map(v=>{
         const row = jtVehMatrix.get(v) || {};
         const total = jtVehTypes.reduce((a,t)=>a+(row[t]||0),0);
-        return `<tr><td class="tt-id">${v}</td>${jtVehTypes.map(t=>`<td class="tt-num">${(row[t]||0).toLocaleString()}</td>`).join('')}<td class="tt-num"><b>${total.toLocaleString()}</b></td></tr>`;
+        return `<tr><td class="tt-id">${v}</td>${jtVehTypes.map(t=>`<td class="tt-num">${(row[t]||0).toLocaleString()}</td>`).join('')}<td class="tt-num"><b>${total.toLocaleString()}</b> <span style="color:var(--grey-500);font-size:11px;">(${fmtPct(total,jtVehGrandTotal)})</span></td></tr>`;
       }).join('')}
       </tbody></table>`;
   } else {
@@ -2127,10 +2136,11 @@ function render(model){
     const rec = dowMap.get(label); rec.count += 1; rec.weight += s.weight;
   });
   const dowFullName = {'จ':'วันจันทร์','อ':'วันอังคาร','พ':'วันพุธ','พฤ':'วันพฤหัสบดี','ศ':'วันศุกร์','ส':'วันเสาร์','อา':'วันอาทิตย์'};
+  const dowTotal = Array.from(dowMap.values()).reduce((a,r)=>a+r.count,0);
   renderBars('chDowTrend', dowLabels.map(l=>{
     const r = dowMap.get(l);
-    return {label:l, value:r.count, valueLabel:`${r.count.toLocaleString()} เที่ยว`, tooltip:`<b>${dowFullName[l]}</b><br>${r.count.toLocaleString()} เที่ยว · น้ำหนักรวม ${fmtNum(r.weight/1000,1)} ตัน`, color:`linear-gradient(90deg, ${NAVY3}, ${ORANGE})`};
-  }), {labelWidth:60});
+    return {label:l, value:r.count, valueLabel:`${r.count.toLocaleString()} (${fmtPct(r.count,dowTotal)})`, tooltip:`<b>${dowFullName[l]}</b><br>${r.count.toLocaleString()} เที่ยว (${fmtPct(r.count,dowTotal)}) · น้ำหนักรวม ${fmtNum(r.weight/1000,1)} ตัน`, color:`linear-gradient(90deg, ${NAVY3}, ${ORANGE})`};
+  }), {labelWidth:60, valWidth:100});
 
   // ---- Insights (dynamic) ----
   const busiestHour = hourRows.slice().sort((a,b)=>b.c-a.c)[0];
