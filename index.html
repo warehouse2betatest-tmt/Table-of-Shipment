@@ -337,10 +337,10 @@
       <div class="panel"><h3>เวลาเฉลี่ย/สูงสุด ต่อ Gate</h3><div class="sub">ใช้ค่า "Running Time (mm)" ที่ระบบต้นทางคำนวณไว้แล้วต่อการเข้า Gate แต่ละครั้ง (ตรวจสอบแล้วว่าตรงกับ Gate Check out − Check in) ไม่ใช่ค่าที่คำนวณเอง</div><div class="chart-box tall" id="chTimeByGate"></div></div>
     </div>
 
-    <div class="section-head reveal"><div><h2><span class="bar"></span>ช่วงเวลาที่รถหนาแน่นที่สุด</h2><p>จำนวน Shipment แยกตามชั่วโมงที่เข้า Gate ครั้งแรก</p></div></div>
+    <div class="section-head reveal"><div><h2><span class="bar"></span>ช่วงเวลาที่รถหนาแน่นที่สุด</h2><p>จำนวน Shipment แยกตามชั่วโมงที่เข้า Gate ครั้งแรก และชั่วโมงที่ออกจาก Gate สุดท้าย</p></div></div>
     <div class="grid-2 reveal">
-      <div class="panel"><h3>จำนวนเที่ยวรถตามช่วงเวลา</h3><div class="sub">ชั่วโมงที่มีรถเข้า Gate มากที่สุด</div><div class="chart-box tall" id="chHourly"></div></div>
-      <div class="panel" id="longestCard"><h3>Shipment ที่ใช้เวลานานที่สุด</h3><div class="sub">นับจาก Gate แรกถึง Gate สุดท้าย</div><div class="highlight-card" id="longestBox"></div></div>
+      <div class="panel"><h3>จำนวนเที่ยวรถตามช่วงเวลา (เข้า)</h3><div class="sub">ชั่วโมงที่มีรถเข้า Gate แรกมากที่สุด — นับจากเวลาเข้า Gate แรกของแต่ละ Shipment</div><div class="chart-box tall" id="chHourly"></div></div>
+      <div class="panel"><h3>จำนวนเที่ยวรถตามช่วงเวลา (ออก)</h3><div class="sub">ชั่วโมงที่มีรถออกจาก Gate สุดท้ายมากที่สุด — นับจากเวลาออก Gate สุดท้ายของแต่ละ Shipment</div><div class="chart-box tall" id="chHourlyOut"></div></div>
     </div>
 
     <div class="section-head reveal"><div><h2><span class="bar"></span>การใช้งานยานพาหนะ (Fleet Utilization)</h2><p>จัดกลุ่มตามตาราง Type: TL / 10W / 12W / 6W / 4W / Pickup / พ่วงแม่-ลูก</p></div></div>
@@ -780,6 +780,10 @@ function renderLineChart(containerId, points, opts={}){
   svg.appendChild(linePath);
 
   const labelEvery = Math.max(1, Math.ceil(n / (opts.maxLabels||12)));
+  // ค่ากำกับตัวเลขบนกราฟ (แสดงติดจุดเลย ไม่ต้องรอ hover) -- ปิดได้ด้วย opts.showValueLabels=false
+  // ถ้าจุดเยอะเกินไปจะเบียดกันอ่านไม่ออก เลยใช้ช่วงห่างเดียวกับป้ายแกน X (labelEvery)
+  const showValueLabels = opts.showValueLabels !== false;
+  const valueLabelFmt = opts.valueLabelFmt || (v => Math.round(v).toLocaleString());
   points.forEach((p,i)=>{
     const cx = xAt(i), cy = yAt(p.y);
     const dot = document.createElementNS(svgNS,'circle');
@@ -789,6 +793,14 @@ function renderLineChart(containerId, points, opts={}){
     dot.addEventListener('mouseenter', e=>showTip(e, `<b>${p.x}</b><br>${opts.tooltipFmt ? opts.tooltipFmt(p.y) : p.y.toLocaleString()}`));
     dot.addEventListener('mousemove', moveTip); dot.addEventListener('mouseleave', hideTip);
     svg.appendChild(dot);
+    if(showValueLabels && (i % labelEvery === 0 || i === n-1)){
+      const valLbl = document.createElementNS(svgNS,'text');
+      const valY = Math.max(cy - 10, padT + 8); // กันไม่ให้ทะลุขอบบนกราฟตอนค่าสูงสุด
+      valLbl.setAttribute('x', cx); valLbl.setAttribute('y', valY); valLbl.setAttribute('text-anchor','middle');
+      valLbl.setAttribute('font-size','10'); valLbl.setAttribute('font-weight','600'); valLbl.setAttribute('fill', color);
+      valLbl.textContent = valueLabelFmt(p.y);
+      svg.appendChild(valLbl);
+    }
     if(i % labelEvery === 0 || i === n-1){
       const lbl = document.createElementNS(svgNS,'text');
       lbl.setAttribute('x', cx); lbl.setAttribute('y', H-10); lbl.setAttribute('text-anchor','middle');
@@ -1120,10 +1132,9 @@ function render(model){
 
   if(!totalShipments){
     document.getElementById('kpiGrid').innerHTML = `<div class="empty-note" style="grid-column:1/-1;">ไม่มี Shipment ตรงกับตัวกรองที่เลือก</div>`;
-    ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCooccur','chMaterialCooccur','chReturnCustomer','chReturnMaterial','chTopShipTo','chWeightHist','chDowTrend'].forEach(id=>emptyState(id));
+    ['chJobType','chStatus','chIssue','chTimeByVehicle','chTimeByGate','chHourly','chHourlyOut','chVehicle','chVehicleShare','chMaterial','chMaterialFreq','chCooccur','chMaterialCooccur','chReturnCustomer','chReturnMaterial','chTopShipTo','chWeightHist','chDowTrend'].forEach(id=>emptyState(id));
     document.getElementById('legJobType').innerHTML=''; document.getElementById('legStatus').innerHTML=''; document.getElementById('legVehicleShare').innerHTML='';
     document.getElementById('alertBanner').innerHTML = `<div class="lead">No Data</div><h3>ไม่มีข้อมูลตามตัวกรองที่เลือก</h3><p>ลองล้างตัวกรองหรือเลือกเดือน/ประเภทรถ/Gate อื่น</p>`;
-    document.getElementById('longestBox').innerHTML = `<div class="hc-icon">—</div><div><div class="hc-title">Longest Shipment</div><div class="hc-main">ไม่มีข้อมูล</div></div>`;
     document.getElementById('topTableBody').innerHTML = '';
     document.getElementById('topSkuTableBody').innerHTML = '';
     document.getElementById('custTableBody').innerHTML = '';
@@ -1198,19 +1209,11 @@ function render(model){
   const hourRows = Object.entries(hourCounts).map(([h,c])=>({h:parseInt(h), c})).sort((a,b)=>a.h-b.h);
   renderBars('chHourly', hourRows.map(r=>({label:`${String(r.h).padStart(2,'0')}:00`, value:r.c, color: `linear-gradient(90deg, ${NAVY2}, ${NAVY3})`})), {unit:'เที่ยว'});
 
-  const withSpan = shipmentList.filter(s=>s.span!==null).sort((a,b)=>b.span-a.span);
-  if(withSpan.length){
-    const top = withSpan[0];
-    document.getElementById('longestBox').innerHTML = `
-      <div class="hc-icon">⏱️</div>
-      <div>
-        <div class="hc-title">Longest Shipment</div>
-        <div class="hc-main">${top.id} · ${fmtMin(top.span)}</div>
-        <div class="hc-sub">ประเภทรถ ${top.vehicleCode} (${top.vehicleRaw}) · ผ่าน ${top.gateList.length} Gate (${top.gateList.join(', ')})${top.issue ? ' · หมายเหตุ: '+top.issue : ''}</div>
-      </div>`;
-  } else {
-    document.getElementById('longestBox').innerHTML = `<div class="hc-icon">—</div><div><div class="hc-title">Longest Shipment</div><div class="hc-main">ไม่มีข้อมูลเวลาที่ใช้ได้</div></div>`;
-  }
+  // ---- ชั่วโมงที่รถ "ออก" จาก Gate สุดท้ายมากที่สุด (คู่กับกราฟ "เข้า" ด้านบน) ----
+  const hourOutCounts = {};
+  shipmentList.forEach(s=>{ if(s.lastOut===null) return; const h = Math.floor(s.lastOut/60); hourOutCounts[h] = (hourOutCounts[h]||0)+1; });
+  const hourOutRows = Object.entries(hourOutCounts).map(([h,c])=>({h:parseInt(h), c})).sort((a,b)=>a.h-b.h);
+  renderBars('chHourlyOut', hourOutRows.map(r=>({label:`${String(r.h).padStart(2,'0')}:00`, value:r.c, color: `linear-gradient(90deg, ${ORANGE2}, ${ORANGE})`})), {unit:'เที่ยว'});
 
   const vehicleAgg = {};
   shipmentList.forEach(s=>{ const code = s.vehicleCode; if(!vehicleAgg[code]) vehicleAgg[code] = {count:0, weight:0}; vehicleAgg[code].count++; vehicleAgg[code].weight += s.weight/1000; });
@@ -1687,8 +1690,8 @@ function render(model){
   const dailyKeys = Array.from(dailyMap.keys()).sort();
   const dailyCountPoints = dailyKeys.map(k=>({x: dayLabel(k), y: dailyMap.get(k).count}));
   const dailyWeightPoints = dailyKeys.map(k=>({x: dayLabel(k), y: dailyMap.get(k).weight/1000}));
-  renderLineChart('chDailyCount', dailyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว'});
-  renderLineChart('chDailyWeight', dailyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString()});
+  renderLineChart('chDailyCount', dailyCountPoints, {color:'#164a7a', tooltipFmt: v=>v.toLocaleString()+' เที่ยว', valueLabelFmt: v=>Math.round(v).toLocaleString()});
+  renderLineChart('chDailyWeight', dailyWeightPoints, {color:'#ff6b35', tooltipFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})+' ตัน', yFmt: v=>Math.round(v).toLocaleString(), valueLabelFmt: v=>v.toLocaleString(undefined,{maximumFractionDigits:1})});
 
   // ---- Customer Pareto (80/20) + one-time-customer stat ----
   const custMap = new Map(); // ชื่อลูกค้าที่ตัดคำนำหน้าแล้ว -> {count, weight}
